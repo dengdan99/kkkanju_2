@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "600185053152",
+    "project_id": "kkkanjuapp",
+    "storage_bucket": "kkkanjuapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:600185053152:android:0c9d0c5e809445467cd585",
+        "android_client_info": {
+          "package_name": "com.leo.kkkanju_2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "600185053152-du6th12bqtu6lmu2uiftodt8ptmthge5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBMgJC9ieIQ41DCBhMQh1X597xJf28cT7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "600185053152-du6th12bqtu6lmu2uiftodt8ptmthge5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

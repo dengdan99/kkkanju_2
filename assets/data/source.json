@@ -1,0 +1,9 @@
+[
+  {
+    "name": "kk看剧",
+    "url": "http://www.kk2021.me",
+    "httpApi": "http://www.kk2021.me/api.php/provide/vod",
+    "httpsApi": "https://www.kk2021.me/api.php/provide/vod",
+    "type": "美剧"
+  }
+]
