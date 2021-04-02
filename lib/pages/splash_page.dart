@@ -10,6 +10,7 @@ import 'package:kkkanju_2/provider/app_info.dart';
 import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
+import 'package:kkkanju_2/utils/ColorsUtil.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:provider/provider.dart';
@@ -35,14 +36,15 @@ class _SplashPageState extends State<SplashPage> {
     String colorKey = SpHelper.getString(Constant.key_theme_color, defValue: Constant.default_theme_color);
     // 初始化主题颜色
     context.read<AppInfoProvider>().setTheme(colorKey);
+//    SpHelper.remove(Constant.key_current_source);
     Map<String, dynamic> source = SpHelper.getObject(Constant.key_current_source);
     if (source == null) {
       String sourceJson = await DefaultAssetBundle.of(context).loadString('assets/data/source.json');
-      List<dynamic> jsonList = json.decode(sourceJson);
-      List<SourceModel> list = jsonList.map((e) => SourceModel.fromJson(e)).toList();
-      await _db.insertBatchSource(list);
-      list = await _db.getSourceList();
-      context.read<SourceProvider>().setCurrentSource(list[2], context);
+      Map json = jsonDecode(sourceJson);
+      SourceModel _sm = SourceModel.fromJson(json);
+//      await _db.insertBatchSource(list);
+//      list = await _db.getSourceList();
+      context.read<SourceProvider>().setCurrentSource(_sm, context);
     } else {
       context.read<SourceProvider>().setCurrentSource(SourceModel.fromJson(source), context);
     }
@@ -71,6 +73,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Material(
+      color: ColorsUtil.hexColor(0x121117),
       child: Stack(
         children: [
           Image.asset(

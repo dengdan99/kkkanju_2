@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
       _firstLoading = true;
     });
     List record = await _db.getRecordList(pageNum: 0, pageSize: 20, played: true);
-    if (!mounted) return 0;
+//    if (!mounted) return 0;
     List<List<VideoModel>> list = await Future.wait(
       _levelList.map((e) => HttpUtils.getLevelVideo(e.level)).toList()
     );

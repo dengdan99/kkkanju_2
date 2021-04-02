@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class SourceModel {
   int id;
   String name;
@@ -5,6 +7,7 @@ class SourceModel {
   String httpApi;
   String httpsApi;
   String type;
+  int version;
 
   SourceModel(
       {this.id,
@@ -12,7 +15,8 @@ class SourceModel {
         this.url,
         this.httpApi,
         this.httpsApi,
-        this.type,});
+        this.type,
+        this.version});
 
   SourceModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -21,6 +25,7 @@ class SourceModel {
     httpApi = json['httpApi'];
     httpsApi = json['httpsApi'];
     type = json['type'];
+    version = json['version'];
   }
 
   Map<String, dynamic> toJson() {
@@ -31,6 +36,7 @@ class SourceModel {
     data['httpApi'] = this.httpApi;
     data['httpsApi'] = this.httpsApi;
     data['type'] = this.type;
+    data['version'] = this.version;
     return data;
   }
 }

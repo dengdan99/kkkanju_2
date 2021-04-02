@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
@@ -70,14 +72,13 @@ void main() async {
   final FirebaseAnalytics analytics = FirebaseAnalytics();
   final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
-  runApp(MyApp());
-
+  /// 状态栏高亮
   SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-//    statusBarBrightness: Brightness.light,
-//    statusBarIconBrightness: Brightness.dark
+      statusBarColor: Colors.transparent,
+      statusBarBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.light
   );
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
 
-  print("systemUiOverlayStyle");
+  runApp(MyApp());
 }

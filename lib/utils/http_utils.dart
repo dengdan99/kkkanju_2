@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/models/category_model.dart';
 import 'package:kkkanju_2/models/source_model.dart';
+import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/utils/xml_util.dart';
@@ -23,13 +27,15 @@ class HttpUtils {
     return _dio;
   }
   static Dio get dio => getDioInstance();
+  static String videoPath = "/provide/vod";
+  static String versionPath = "/index/version";
 
   static Future<List<CategoryModel>> getCategoryList() async {
     try {
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Map<String, dynamic> params = {"ac": "list", "at": "xml"};
-      Response response = await dio.get(currentSource.httpsApi, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
       String xmlStr = response.data.toString();
       return XmlUtil.parseCategoryList(xmlStr);
     } catch (e, s) {
@@ -61,7 +67,7 @@ class HttpUtils {
       if (hour != null) {
         params["h"] = hour;
       }
-      Response response = await dio.get(currentSource.httpsApi, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
@@ -96,7 +102,7 @@ class HttpUtils {
       // 先查找list
       Map<String, dynamic> params = {"ac": "list", "at": "xml"};
       params["wd"] = keyword;
-      Response response = await dio.get(currentSource.httpsApi, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
       if (videos.isNotEmpty) {
@@ -104,7 +110,7 @@ class HttpUtils {
         params["ac"] = "videolist";
         params["at"] = "xml";
         params["ids"] = videos.map((e) => e.id).join(",");
-        response = await dio.get(currentSource.httpsApi, queryParameters: params);
+        response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
         xmlStr = response.data.toString();
         videos = XmlUtil.parseVideoList(xmlStr);
       }
@@ -122,7 +128,7 @@ class HttpUtils {
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Map<String, dynamic> params = {"ac": "videolist","level": level, "at": "xml"};
-      Response response = await dio.get(currentSource.httpsApi, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
@@ -130,5 +136,23 @@ class HttpUtils {
       BotToast.showText(text: e.error ?? e.toString());
     }
     return videos;
+  }
+
+  static Future<VersionModel> getLastVersion() async {
+    VersionModel version;
+    try {
+      Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
+      SourceModel currentSource = SourceModel.fromJson(sourceJson);
+      Map<String, dynamic> params = {"platform": Platform.isIOS ? "ios" : "android"};
+      Response response = await dio.get(currentSource.httpsApi + versionPath, queryParameters: params);
+      Map json = jsonDecode(response.data.toString());
+      if (json['code'] == 1) {
+        version = VersionModel.fromJson(json['info']);
+      }
+    }  catch (e, s) {
+      print(s);
+      BotToast.showText(text: e.error ?? e.toString());
+    }
+    return version;
   }
 }

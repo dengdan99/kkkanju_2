@@ -367,7 +367,7 @@ class _DownloadPageState extends State<DownloadPage> with SingleTickerProviderSt
         context: context,
         builder: (_) {
           return AlertDialog(
-            title: Text('温馨提示'),
+            title: Text('温馨提示', style: TextStyle(color: Colors.black)),
             content: RichText(
               text: TextSpan(
                   style: TextStyle(color: Colors.black),

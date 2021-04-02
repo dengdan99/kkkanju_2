@@ -54,7 +54,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       _currentSource = SourceModel.fromJson(sourceJson);
       baseUrl = _currentSource.httpsApi;
     }
-    VideoModel video = await HttpUtils.getVideoById(baseUrl, widget.videoId);
+    VideoModel video = await HttpUtils.getVideoById(baseUrl + HttpUtils.videoPath, widget.videoId);
     _videoModel = video;
     if (video != null) {
       if (video.anthologies.isNotEmpty) {
@@ -91,7 +91,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   void _startPlay(String url, String name, { int playPosition }) async {
-    print(url);
     // 切换视频，重置_cachePlayedSecond
     _cachePlayedSecond = -1;
 
@@ -117,6 +116,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   void _initController(String url, String name, { int playPosition }) async {
+//        url = "http://static.chinameifei.com/group2/M00/2E/C3/dyqVIl_kIm6ABKpkAABSNGvBuCk29.m3u8";
+        url = "http://iqiyi.cdn22-okzyw.net/20210317/10325_133d4c2a/1200k/hls/index.m3u8";
+    //    url = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
+    print("播放地址：" + url);
     // 设置资源
     _controller = VideoPlayerController.network(url, videoPlayerOptions: VideoPlayerOptions(
         mixWithOthers: true
@@ -126,6 +129,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       await _controller.initialize();
     } catch(err) {
       print(err);
+      return;
     }
 
     Duration position;
@@ -147,6 +151,16 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
     _controller.addListener(_videoListener);
     setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_videoListener);
+    _controller?.dispose();
+    _chewieController?.dispose();
+    _db.close();
+
+    super.dispose();
   }
 
   void _videoListener() async {
@@ -473,7 +487,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             aspectRatio: 16/9,
             child: Container(
               padding: EdgeInsets.only(top: MediaQueryData.fromWindow(window).padding.top),
-              color: Colors.black,
+              color: KkColors.black,
               child: _chewieController != null && _controller != null
                 ? Chewie(controller: _chewieController)
                   : Stack(

@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/source_model.dart';
+import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/pages/home_page.dart';
 import 'package:kkkanju_2/pages/my_page.dart';
 import 'package:kkkanju_2/pages/search_bar.dart';
@@ -11,8 +12,9 @@ import 'package:kkkanju_2/provider/download_task.dart';
 import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
-import 'package:kkkanju_2/utils/ColorsUtil.dart';
+import 'package:kkkanju_2/utils/http_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -37,6 +39,51 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     super.initState();
     // 初始化下载器
     context.read<DownloadTaskProvider>().initialize(context);
+    _checkVersion();
+  }
+
+  Future<void> _checkVersion() async {
+    int _localVersion = _currentSource.version;
+    bool onclickOk;
+
+    VersionModel version = await HttpUtils.getLastVersion();
+    if (version == null) return;
+    if (version.enable && version.version > _localVersion) {
+      onclickOk = await _uploadDialog(version);
+      if (onclickOk) {
+        if (version.jumpUrl.isNotEmpty) {
+          launch(version.jumpUrl);
+        } else {
+          launch(version.appUrl);
+        }
+      }
+    }
+  }
+  Future<bool> _uploadDialog(VersionModel version) {
+    List<Widget> buttons = [];
+    if (!version.isForce) {
+      buttons.add(TextButton(
+        child: Text("暂时不升级"),
+        onPressed: () => Navigator.of(context).pop(false),
+      ));
+    }
+    buttons.add(TextButton(
+      child: Text("立即升级"),
+      onPressed: () {
+        Navigator.of(context).pop(true);
+      },
+    ));
+    return showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: Text("发现新的版本", style: TextStyle(color: Colors.black),),
+          content: Text(version.descript, style: TextStyle(color: Colors.black),),
+          actions: buttons,
+        );
+      },
+    );
   }
 
   Widget _searchInput(String text) {
