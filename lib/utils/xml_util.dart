@@ -44,35 +44,44 @@ class XmlUtil {
   static VideoModel parseVideo(String xmlStr) {
     final document = xml.parse(xmlStr);
     final video = document.findAllElements('video').first;
+    final source = video.findElements('dl').first;
     if (video == null) return null;
-    List<Anthology> anthologies = [];
-    String str = getNodeCData(video.findElements('dl').first, 'dd');
-    if (str != null) {
-      str.split('#').forEach((s) {
-        if (s.indexOf('\$') > -1) {
-          anthologies.add(Anthology(name: s.split('\$')[0], url: s.split('\$')[1]));
-        } else {
-          anthologies.add(Anthology(name: null, url: s));
-        }
-      });
-    }
-    String stateStr = getNodeText(video, 'state');
+    List<VideoSource> sources = [];
+    int index = 1;
+    List<Anthology> defAnthologies = [];
+    source.findElements('dd').forEach((element) {
+      String str = element.text;
+      List<Anthology> anthologies = [];
+      if (str != null) {
+        str.split('#').forEach((s) {
+          if (s.indexOf('\$') > -1) {
+            anthologies.add(Anthology(name: s.split('\$')[0], url: s.split('\$')[1]));
+          } else {
+            anthologies.add(Anthology(name: null, url: s));
+          }
+        });
+        sources.add(VideoSource(name: '资源' + index.toString(), anthologies: anthologies));
+        defAnthologies = anthologies;
+        index ++;
+      }
+    });
     return VideoModel(
-        id: getNodeText(video, 'id'),
-        tid: getNodeText(video, 'tid'),
-        name: getNodeCData(video, 'name'),
-        type: getNodeText(video, 'type'),
-        pic: getNodeText(video, 'pic'),
-        lang: getNodeText(video, 'lang'),
-        area: getNodeText(video, 'area'),
-        year: getNodeText(video, 'year'),
-        last: getNodeText(video, 'last'),
-        state: getNodeText(video, 'state'),
-        note: getNodeCData(video, 'note'),
-        actor: getNodeCData(video, 'actor'),
-        director: getNodeCData(video, 'director'),
-        des: getNodeCData(video, 'des'),
-        anthologies: anthologies
+      id: getNodeText(video, 'id'),
+      tid: getNodeText(video, 'tid'),
+      name: getNodeCData(video, 'name'),
+      type: getNodeText(video, 'type'),
+      pic: getNodeText(video, 'pic'),
+      lang: getNodeText(video, 'lang'),
+      area: getNodeText(video, 'area'),
+      year: getNodeText(video, 'year'),
+      last: getNodeText(video, 'last'),
+      state: getNodeText(video, 'state'),
+      note: getNodeCData(video, 'note'),
+      actor: getNodeCData(video, 'actor'),
+      director: getNodeCData(video, 'director'),
+      des: getNodeCData(video, 'des'),
+      anthologies: defAnthologies,
+      sources: sources,
     );
   }
 

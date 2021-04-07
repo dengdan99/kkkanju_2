@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// 视频实体类
 class VideoModel {
   String id;
@@ -16,6 +18,7 @@ class VideoModel {
   String director; // 导演
   String des; // 描述
   List<Anthology> anthologies; // 选集列表
+  List<VideoSource> sources; // 播放源
 
   VideoModel({
     this.id,
@@ -32,7 +35,8 @@ class VideoModel {
     this.actor,
     this.director,
     this.des,
-    this.anthologies});
+    this.anthologies,
+    this.sources});
 
   VideoModel.fromJson(Map<String, dynamic> json) {
     this.id = json['id'];
@@ -49,8 +53,14 @@ class VideoModel {
     this.actor = json['actor'];
     this.director = json['director'];
     this.des = json['des'];
+    if (json['sources'] != null) {
+      this.sources = <VideoSource>[];
+      json['sources'].forEach((e) {
+        this.sources.add(VideoSource.fromJSON(e));
+      });
+    }
     if (json['anthologies'] != null) {
-      this.anthologies = List<Anthology>();
+      this.anthologies = <Anthology>[];
       json['anthologies'].forEach((e) {
         this.anthologies.add(Anthology.fromJSON(e));
       });
@@ -73,6 +83,9 @@ class VideoModel {
     data['actor'] = this.actor;
     data['director'] = this.director;
     data['des'] = this.des;
+    if (this.sources != null) {
+      data['sources'] = this.sources.map((e) => e.toJson()).toList();
+    }
     if (this.anthologies != null) {
       data['anthologies'] = this.anthologies.map((v) => v.toJson()).toList();
     }
@@ -96,6 +109,33 @@ class Anthology {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['name'] = this.name;
     data['url'] = this.url;
+    return data;
+  }
+}
+
+/// 视频源
+class VideoSource {
+  String name;
+  List<Anthology> anthologies;
+
+  VideoSource({this.name, this.anthologies});
+
+  VideoSource.fromJSON(Map<String, dynamic> json) {
+    name = json['name'];
+    if (json['anthologies'] != null) {
+      this.anthologies = <Anthology>[];
+      json['anthologies'].forEach((e) {
+        this.anthologies.add(Anthology.fromJSON(e));
+      });
+    }
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['name'] = this.name;
+    if (this.anthologies != null) {
+      data['anthologies'] = this.anthologies.map((v) => v.toJson()).toList();
+    }
     return data;
   }
 }

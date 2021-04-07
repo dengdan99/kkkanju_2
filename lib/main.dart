@@ -6,6 +6,7 @@ import 'package:firebase_analytics/observer.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/pages/splash_page.dart';
@@ -47,6 +48,9 @@ class MyApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             onGenerateRoute: Application.router.generator,
             theme: ThemeData.light().copyWith(
+              appBarTheme: AppBarTheme(
+                brightness: Brightness.dark,
+              ),
               backgroundColor: _themeColor,
               primaryColor: _themeColor,
               accentColor: Colors.white,
@@ -68,6 +72,9 @@ class MyApp extends StatelessWidget {
 }
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
+
   /// 创建全局变量，flutter会根据系统平台自动读取第五步下载的对应配置文件
   final FirebaseAnalytics analytics = FirebaseAnalytics();
   final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
@@ -75,8 +82,8 @@ void main() async {
   /// 状态栏高亮
   SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarBrightness: Brightness.light,
-      statusBarIconBrightness: Brightness.light
+//      statusBarBrightness: Brightness.light,
+//      statusBarIconBrightness: Brightness.light
   );
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
 

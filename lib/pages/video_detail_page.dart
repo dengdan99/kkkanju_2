@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:bot_toast/bot_toast.dart';
@@ -38,8 +39,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   SourceModel _currentSource;
   VideoModel _videoModel;
   RecordModel _recordModel;
+  double _aspectRatio = 16 / 9;
   bool _isSingleVideo = false; // 是否单视频,没有选集
   int _cachePlayedSecond = -1; // 临时的播放秒数
+  int _sourceIndex = 0;
 
   @override
   void initState() {
@@ -52,35 +55,36 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     if (baseUrl == null) {
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       _currentSource = SourceModel.fromJson(sourceJson);
-      baseUrl = _currentSource.httpsApi;
+      baseUrl = _currentSource.httpsApi + HttpUtils.videoPath;
     }
-    VideoModel video = await HttpUtils.getVideoById(baseUrl + HttpUtils.videoPath, widget.videoId);
+    VideoModel video = await HttpUtils.getVideoById(baseUrl, widget.videoId);
     _videoModel = video;
     if (video != null) {
-      if (video.anthologies.isNotEmpty) {
+      if (video.sources.isNotEmpty) {
         RecordModel recordModel = await _db.getRecordByVid(baseUrl, widget.videoId);
         setState(() {
           _recordModel = recordModel;
-          // 单视频，只有一个anthology，并且name为null
-          if (video.anthologies.length == 1 && video.anthologies.first.name == null) {
-            _isSingleVideo = true;
+          if (recordModel != null) {
+            print('recordModel.currentSourceIndex' + recordModel.currentSourceIndex.toString());
+            _sourceIndex = recordModel.currentSourceIndex;
           }
         });
 
         String url;
         String name;
-        int position;
+        int position = 0;
+        VideoSource videoSource = video.sources[_sourceIndex];
         if (_recordModel == null) {
-          url = video.anthologies.first.url;
-          name = video.anthologies.first.name == null ? video.name : (video.name + '  ' + video.anthologies.first.name);
+          url = videoSource.anthologies.first.url;
+          name = videoSource.anthologies.first.name == null ? video.name : (video.name + '  ' + videoSource.anthologies.first.name);
         } else {
-          Anthology anthology = video.anthologies.firstWhere((e) => e.name == _recordModel.anthologyName, orElse: () => null);
-          if (anthology == null) {
+          Anthology anthology = videoSource.anthologies.firstWhere((e) => e.name == _recordModel.anthologyName, orElse: () => null);
+          if (anthology != null) {
             url = anthology.url;
             name = anthology.name == null ? video.name : (video.name + '  ' + anthology.name);
           } else {
-            url = video.anthologies.first.url;
-            name = video.anthologies.first.name == null ? video.name : (video.name + '  ' + video.anthologies.first.name);
+            url = videoSource.anthologies.first.url;
+            name = videoSource.anthologies.first.name == null ? video.name : (video.name + '  ' + videoSource.anthologies.first.name);
           }
           position = recordModel.playedTime;
         }
@@ -117,7 +121,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   void _initController(String url, String name, { int playPosition }) async {
 //        url = "http://static.chinameifei.com/group2/M00/2E/C3/dyqVIl_kIm6ABKpkAABSNGvBuCk29.m3u8";
-        url = "http://iqiyi.cdn22-okzyw.net/20210317/10325_133d4c2a/1200k/hls/index.m3u8";
+//        url = "http://iqiyi.cdn22-okzyw.net/20210317/10325_133d4c2a/1200k/hls/index.m3u8";
     //    url = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
     print("播放地址：" + url);
     // 设置资源
@@ -127,6 +131,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     try {
       // 为了自适应视频比例
       await _controller.initialize();
+      setState(() {
+        _aspectRatio = _controller.value.aspectRatio;
+      });
     } catch(err) {
       print(err);
       return;
@@ -142,6 +149,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         autoPlay: true,
         startAt: position,
         allowedScreenSleep: false,
+        aspectRatio: _aspectRatio,
         playbackSpeeds: [0.5, 1, 1.25, 1.5, 2],
         customControls: VideoControls(
           title: name,
@@ -171,7 +179,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
     String anthologyName;
     if (!_isSingleVideo) {
-      Anthology anthology = _videoModel.anthologies.firstWhere((e) => e.url == _url, orElse: () => null);
+      VideoSource vs = _videoModel.sources[_sourceIndex];
+      List<Anthology> anthologies = vs.anthologies;
+      Anthology anthology = anthologies.firstWhere((e) => e.url == _url, orElse: () => null);
       if (anthology != null) {
         anthologyName = anthology.name;
       }
@@ -187,6 +197,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           name: _videoModel.name,
           pic: _videoModel.pic,
           collected: 0,
+          currentSourceIndex: _sourceIndex,
           anthologyName: anthologyName,
           progress: 0,
           playedTime: 0
@@ -318,51 +329,18 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           ],
         ),
       ),
-      Padding(
-        padding: EdgeInsets.only(top: 8, bottom: 4),
-        child: Divider(
-          color: Colors.grey.withOpacity(0.5),
-        ),
-      )
+//      Padding(
+//        padding: EdgeInsets.only(top: 8),
+//        child: Divider(
+//          color: Colors.grey.withOpacity(0.5),
+//        ),
+//      )
     ]);
     // 添加选集
     if (!_isSingleVideo) {
       children.addAll([
-        Padding(
-          padding: EdgeInsets.only(left: 6),
-          child: Text('选集', style: TextStyle(
-            color: KkColors.primaryWhite,
-            fontSize: 18,
-            height: 1
-          ),),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: video.anthologies.map((e) {
-              return SizedBox(
-                height: 36,
-                child: RaisedButton(
-                  elevation: 0,
-                  highlightElevation: 4,
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  color: _url == e.url ? KkColors.primaryRed : null,
-                  child: Text(e.name, style: TextStyle(
-                      color: _url == e.url ? Colors.white : null,
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal
-                  ),),
-                  onPressed: () async {
-                    if (_url == e.url) return;
-                    _startPlay(e.url, video.name + '  ' + e.name);
-                  },
-                ),
-              );
-            }).toList(),
-          ),
-        ),
+        /// 资源选择
+        _buildAnthology(),
         Divider(
           color: Colors.grey.withOpacity(0.5),
         ),
@@ -428,6 +406,126 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     );
   }
 
+  // 选集部分
+  Widget _buildAnthology() {
+    if (_videoModel == null) {
+      return Container();
+    }
+    return DefaultTabController(
+      length: _videoModel.sources.length,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.only(bottom: 10),
+            child: TabBar(
+              isScrollable: true,
+              onTap: (index) {
+                setState(() {
+                  _sourceIndex = index;
+                });
+              },
+              tabs: _videoModel.sources.map((e) => Tab(text: e.name,)).toList(),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.only(bottom: 5),
+            child: SizedBox(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _videoModel.sources[_sourceIndex].anthologies.map((e) {
+                      return SizedBox(
+                        height: 36,
+                        child: RaisedButton(
+                          elevation: 0,
+                          highlightElevation: 4,
+                          padding: EdgeInsets.symmetric(horizontal: 8),
+                          color: _url == e.url ? KkColors.primaryRed : null,
+                          child: Text(e.name, style: TextStyle(
+                              color: _url == e.url ? Colors.white : null,
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal
+                          ),),
+                          onPressed: () async {
+                            if (_url == e.url) return;
+                            _startPlay(e.url, _videoModel.name + '  ' + e.name);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+//    return Container(
+//      child: _videoModel != null ? DefaultTabController(
+//        length: _videoModel.sources.length,
+//        child: Column(
+//          children: [
+//            TabBar(
+//              isScrollable: true,
+//              tabs: _videoModel.sources.map((e) => Tab(text: e.name,)).toList(),
+//              onTap: (index) {
+//                setState(() {
+//                  _sourceIndex = index;
+//                });
+//              },
+//            ),
+//            Padding(
+//              padding: EdgeInsets.only(left: 6, bottom: 10),
+//              child: Text('选集', style: TextStyle(
+//                  color: KkColors.primaryWhite,
+//                  fontSize: 18,
+//                  height: 1
+//              ),),
+//            ),
+//            TabBarView(
+//              /// 选集
+//              children: [
+//                SizedBox(
+//                  height: 100,
+//                  child: Padding(
+//                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//                    child: Wrap(
+//                      spacing: 8,
+//                      runSpacing: 8,
+//                      children: video.anthologies.map((e) {
+//                        return SizedBox(
+//                          height: 36,
+//                          child: RaisedButton(
+//                            elevation: 0,
+//                            highlightElevation: 4,
+//                            padding: EdgeInsets.symmetric(horizontal: 8),
+//                            color: _url == e.url ? KkColors.primaryRed : null,
+//                            child: Text(e.name, style: TextStyle(
+//                                color: _url == e.url ? Colors.white : null,
+//                                fontSize: 14,
+//                                fontWeight: FontWeight.normal
+//                            ),),
+//                            onPressed: () async {
+//                              if (_url == e.url) return;
+//                              _startPlay(e.url, video.name + '  ' + e.name);
+//                            },
+//                          ),
+//                        );
+//                      }).toList(),
+//                    ),
+//                  ),
+//                ),
+//              ],
+//            ),
+//          ],
+//        ),
+//      ) : Container(),
+//    );
+  }
+
   Widget _buildLabelText(String label, String text) {
     return RichText(
         text: TextSpan(
@@ -484,7 +582,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       body: Column(
         children: [
           AspectRatio(
-            aspectRatio: 16/9,
+            aspectRatio: _aspectRatio,
             child: Container(
               padding: EdgeInsets.only(top: MediaQueryData.fromWindow(window).padding.top),
               color: KkColors.black,

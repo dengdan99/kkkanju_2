@@ -15,6 +15,7 @@ class DBHelper {
   final String _columnName = 'name';
   final String _columnUrl = 'url';
   final String _columnType = 'type';
+  final String _columnCurrentSourceIndex = 'source';
 
   /* 视频资源表 */
   final String _sourceTableName = 'table_source';
@@ -57,11 +58,11 @@ class DBHelper {
   initDb() async {
     _allDownloadColumn = [_columnId, _columnApi, _columnVid, _columnTid, _columnType, _columnName, _columnPic, _columnUrl, _columnFileId, _columnStatus, _columnProgress, _columnSavePath];
     _allSourceColumn = [_columnId, _columnName, _columnUrl, _columnType, _columnHttpApi, _columnHttpsApi];
-    _allRecordColumn = [_columnId, _columnApi, _columnVid, _columnTid, _columnType, _columnName, _columnPic, _columnCollected, _columnProgress, _columnAnthologyName, _columnPlayedTime, _columnCreateAt, _columnUpdateAt];
+    _allRecordColumn = [_columnId, _columnApi, _columnVid, _columnCurrentSourceIndex, _columnTid, _columnType, _columnName, _columnPic, _columnCollected, _columnProgress, _columnAnthologyName, _columnPlayedTime, _columnCreateAt, _columnUpdateAt];
 
     String databasesPath  = await getDatabasesPath();
     String path = join(databasesPath, Constant.key_db_name);
-    _db = await openDatabase(path, version: 2, onCreate: (Database db, int version) async {
+    _db = await openDatabase(path, version: 3, onCreate: (Database db, int version) async {
       // 创建资源表
       await db.execute('''
         create table $_sourceTableName (
@@ -99,6 +100,7 @@ class DBHelper {
           $_columnVid VARCHAR (32) not null, 
           $_columnTid VARCHAR (32),
           $_columnType VARCHAR (64),
+          $_columnCurrentSourceIndex VARCHAR (16),
           $_columnName TEXT,
           $_columnPic TEXT not null,
           $_columnCollected INTEGER NOT NULL DEFAULT 0,
@@ -109,6 +111,12 @@ class DBHelper {
           $_columnUpdateAt INTEGER NOT NULL
         )
       ''');
+    }, onUpgrade: (Database db, int oldVersion, int newVersion) async{
+      if (oldVersion <= 2) {
+        print("updateTable version $oldVersion $newVersion");
+        await db.execute(
+            '''alter table $_recordTableName add column $_columnCurrentSourceIndex VARCHAR (16) ''');
+      }
     });
   }
 
@@ -368,7 +376,7 @@ class DBHelper {
     return await _db.delete(_recordTableName, where: '$_columnCollected = 0 AND $_columnUpdateAt < ?', whereArgs: [agoTime]);
   }
   /// 根据ID修改记录
-  Future<int> updateRecord(int id, {int collected, String anthologyName, double progress, int playedTime}) async {
+  Future<int> updateRecord(int id, {int collected, String anthologyName, double progress, int playedTime, int currentSourceIndex}) async {
     if (_db == null || !_db.isOpen) {
       await _instance.initDb();
     }
@@ -389,6 +397,9 @@ class DBHelper {
     if (playedTime != null) {
       maps[_columnPlayedTime] = playedTime;
     }
+    if (currentSourceIndex != null) {
+      maps[_columnCurrentSourceIndex] = currentSourceIndex;
+    }
 
     return await _db.update(_recordTableName, maps,
         where: '$_columnId = ?', whereArgs: [id]);
@@ -405,7 +416,6 @@ class DBHelper {
         columns: _allRecordColumn,
         where: '$_columnApi = ? AND $_columnVid = ?',
         whereArgs: [httpApi, vid]);
-
     if (maps.length > 0) {
       return RecordModel.fromJson(maps.first);
     }
@@ -416,7 +426,6 @@ class DBHelper {
     if (_db == null || !_db.isOpen) {
       await _instance.initDb();
     }
-
     List<String> whereStr = [];
     List<dynamic> whereArgs = [];
 

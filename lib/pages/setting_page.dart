@@ -1,5 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/provider/app_info.dart';
@@ -35,7 +36,7 @@ class _SettingPageState extends State<SettingPage> {
         children: <Widget>[
           ListTile(
             leading: Icon(Icons.wifi),
-            title: Text('WiFi自动下载'),
+            title: Text('WiFi自动下载', style: TextStyle(color: KkColors.black)),
             trailing: Switch(
                 value: _wifiAutoDownload,
                 onChanged: (v) {
@@ -55,7 +56,7 @@ class _SettingPageState extends State<SettingPage> {
           ),
           ListTile(
             leading: Icon(Icons.crop),
-            title: Text('M3U8转MP4'),
+            title: Text('M3U8转MP4', style: TextStyle(color: KkColors.black)),
             trailing: Switch(
                 value: _toMP4,
                 onChanged: (v) {
@@ -75,7 +76,7 @@ class _SettingPageState extends State<SettingPage> {
           ),
           ListTile(
             leading: Icon(Icons.clear_all),
-            title: Text('清空缓存'),
+            title: Text('清空缓存', style: TextStyle(color: KkColors.black)),
             trailing: Icon(Icons.chevron_right),
             onTap: () {
               BotToast.showText(text: '待开发');

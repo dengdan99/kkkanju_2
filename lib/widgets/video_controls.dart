@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:screen/screen.dart';
 import 'package:video_player/video_player.dart';
-
 import 'material_progress_bar.dart';
 
 class VideoControls extends MaterialControls{
@@ -212,6 +211,12 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
   int _startTimeStamp = 0; // 滑动的起始时间，毫秒
   int _dragDuration = 0; // 滑动的间隔时间，毫秒
   bool _leftVerticalDrag; // 是否左边滑动
+
+  Function wrapHorizontalGesture(Function function) =>
+      widget.horizontalGesture == true ? function : (DragStartDetails details) {};
+
+  Function wrapVerticalGesture(Function function) =>
+      widget.verticalGesture == true ? function : (dynamic details) {};
 
   void _resetDragParam() {
     _startPosition = 0;
@@ -439,6 +444,13 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
           children: <Widget>[
             BackButton(
               color: Colors.white,
+              onPressed: () {
+                if (chewieController.isFullScreen) {
+                  chewieController.exitFullScreen();
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
             ),
             Expanded(
                 flex: 1,
@@ -569,9 +581,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
     );
   }
 
-  Widget _buildSpeedButton(
-      VideoPlayerController controller,
-      ) {
+  Widget _buildSpeedButton(VideoPlayerController controller) {
     return GestureDetector(
       onTap: () async {
         _hideTimer?.cancel();
@@ -611,9 +621,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
     );
   }
 
-  GestureDetector _buildMuteButton(
-      VideoPlayerController controller,
-      ) {
+  GestureDetector _buildMuteButton(VideoPlayerController controller) {
     return GestureDetector(
       onTap: () {
         _cancelAndRestartTimer();

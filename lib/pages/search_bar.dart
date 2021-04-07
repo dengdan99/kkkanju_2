@@ -42,7 +42,7 @@ class SearchBarDelegate extends SearchDelegate<String> {
       primaryColorDark: KkColors.mainBlackBg,
       backgroundColor: KkColors.mainBlackBg,
       appBarTheme: AppBarTheme(
-        brightness: colorScheme.brightness,
+        brightness: Brightness.dark,
         backgroundColor: KkColors.black,
         iconTheme: theme.primaryIconTheme.copyWith(color: KkColors.greyInBalck),
         textTheme: theme.textTheme,

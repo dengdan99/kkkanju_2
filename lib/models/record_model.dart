@@ -8,6 +8,7 @@ class RecordModel {
   String pic; // 缩略图
 
   int collected; // 收藏状态  0-未收藏   1-已收藏
+  int currentSourceIndex; // 选择的资源
   String anthologyName; // 播放选集名
   double progress; // 播放进度  0~1
   int playedTime; // 已播放时长，单位：毫秒
@@ -23,6 +24,7 @@ class RecordModel {
     this.name,
     this.pic,
     this.collected,
+    this.currentSourceIndex,
     this.anthologyName,
     this.progress,
     this.playedTime,
@@ -39,6 +41,7 @@ class RecordModel {
     this.name = json['name'];
     this.pic = json['pic'];
     this.collected = json['collected'];
+    this.currentSourceIndex = json['currentSourceIndex'];
     this.anthologyName = json['anthologyName'];
     this.progress = json['progress'];
     this.playedTime = json['playedTime'];
@@ -56,6 +59,7 @@ class RecordModel {
     data['name'] = this.name;
     data['pic'] = this.pic;
     data['collected'] = this.collected;
+    data['currentSourceIndex'] = this.currentSourceIndex;
     data['anthologyName'] = this.anthologyName;
     data['progress'] = this.progress;
     data['playedTime'] = this.playedTime;

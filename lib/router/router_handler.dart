@@ -1,5 +1,6 @@
 import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:kkkanju_2/pages/about_page.dart';
 import 'package:kkkanju_2/pages/collection_page.dart';
 import 'package:kkkanju_2/pages/download_page.dart';
 import 'package:kkkanju_2/pages/local_video_page.dart';
@@ -9,8 +10,6 @@ import 'package:kkkanju_2/pages/setting_page.dart';
 import 'package:kkkanju_2/pages/source_manage_page.dart';
 import 'package:kkkanju_2/pages/video_detail_page.dart';
 import 'package:kkkanju_2/utils/fluro_convert_util.dart';
-import 'package:kkkanju_2/views/demo.dart';
-import 'package:kkkanju_2/views/not_found.dart';
 
 Handler homeHandler = Handler(
   handlerFunc: (BuildContext context, Map<String, List<String>> params) {
@@ -32,12 +31,6 @@ Handler videoDetailHandler = Handler(
 Handler sourceManageHandle = Handler(
   handlerFunc: (BuildContext context, Map<String, List<String>> params) {
     return SourceManagePage();
-  }
-);
-
-Handler demoHandler = Handler(
-  handlerFunc: (BuildContext context, Map<String, List<String>> params) {
-    return DemoPage();
   }
 );
 
@@ -73,8 +66,8 @@ Handler playRecordHandle = Handler(
   }
 );
 
-Handler notFoundHandler =  Handler(
-  handlerFunc: (BuildContext context, Map<String, List<String>> params) {
-    return NotFoundPage();
-  }
+Handler aboutUsHandler = Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params) {
+      return AboutPage();
+    }
 );

@@ -1,4 +1,5 @@
 import 'package:fluro/fluro.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:kkkanju_2/router/router_handler.dart';
 
 class Routers {
@@ -12,17 +13,23 @@ class Routers {
   static String localVideoPage = '/localVideo';
   static String collectionPage = '/collection';
   static String playRecordPage = '/playRecord';
+  static String aboutUsPage = '/aboutUs';
 
   static void configureRoutes(FluroRouter router) {
     router.define(homePage, handler: homeHandler);
     router.define(detailPage, handler: videoDetailHandler);
     router.define(sourceManagePage, handler: sourceManageHandle);
-    router.define(demoPage, handler: demoHandler);
     router.define(settingPage, handler: settingHandle);
     router.define(downloadPage, handler: downloadHandle);
     router.define(localVideoPage, handler: localVideoHandle);
     router.define(collectionPage, handler: collectionHandle);
     router.define(playRecordPage, handler: playRecordHandle);
-    router.notFoundHandler = notFoundHandler;
+    router.define(aboutUsPage, handler: aboutUsHandler);
+    router.notFoundHandler = Handler(
+      handlerFunc: (BuildContext context, Map<String,List<String>> params){
+        print('错误路由');
+        return null;
+      }
+    );
   }
 }
