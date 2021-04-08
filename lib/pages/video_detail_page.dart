@@ -61,7 +61,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     _videoModel = video;
     if (video != null) {
       if (video.sources.isNotEmpty) {
-        RecordModel recordModel = await _db.getRecordByVid(baseUrl, widget.videoId);
+        RecordModel recordModel = await _db.getRecordByVid(_currentSource.httpsApi, widget.videoId);
         setState(() {
           _recordModel = recordModel;
           if (recordModel != null) {
@@ -123,6 +123,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 //        url = "http://static.chinameifei.com/group2/M00/2E/C3/dyqVIl_kIm6ABKpkAABSNGvBuCk29.m3u8";
 //        url = "http://iqiyi.cdn22-okzyw.net/20210317/10325_133d4c2a/1200k/hls/index.m3u8";
     //    url = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
+//    url = "https://cloud189-shzh-corp.oos-gdsz.ctyunapi.cn/0ff847e1-d808-4f2f-8023-c4fe4cc945da?response-content-disposition=attachment%3Bfilename%3D%22%C3%A5%C2%AE%C2%9E%C3%A4%C2%B9%C2%A0%C3%A5%C2%8C%C2%BB%C3%A7%C2%94%C2%9F%C3%A6%C2%A0%C2%BC%C3%A8%C2%95%C2%BES17E01.mp4%22&x-amz-CLIENTNETWORK=UNKNOWN&x-amz-CLOUDTYPEIN=CORP&x-amz-CLIENTTYPEIN=UNKNOWN&Signature=NQvsxurLQFyCA5WUwsVxrdG%2BNE4%3D&AWSAccessKeyId=4549320003c8aac9538f&Expires=1617851793&x-amz-limitrate=102400&response-content-type=video/mp4&x-amz-FSIZE=639772394&x-amz-UID=172982920492925&x-amz-UFID=81397312056489820";
     print("播放地址：" + url);
     // 设置资源
     _controller = VideoPlayerController.network(url, videoPlayerOptions: VideoPlayerOptions(
@@ -136,7 +137,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       });
     } catch(err) {
       print(err);
-      return;
+//      return;
     }
 
     Duration position;
@@ -145,16 +146,17 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     }
 
     _chewieController = ChewieController(
-        videoPlayerController: _controller,
-        autoPlay: true,
-        startAt: position,
-        allowedScreenSleep: false,
-        aspectRatio: _aspectRatio,
-        playbackSpeeds: [0.5, 1, 1.25, 1.5, 2],
-        customControls: VideoControls(
-          title: name,
-          actions: _buildDownload(url, name),
-        )
+      videoPlayerController: _controller,
+      autoPlay: true,
+      startAt: position,
+      allowedScreenSleep: false,
+      aspectRatio: _aspectRatio,
+      playbackSpeeds: [0.5, 1, 1.25, 1.5, 2],
+      errorBuilder: _buildPlayerError,
+      customControls: VideoControls(
+        title: name,
+        actions: _buildDownload(url, name),
+      )
     );
 
     _controller.addListener(_videoListener);
@@ -190,7 +192,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     // 播放记录
     if (_recordModel == null) {
       _recordModel = RecordModel(
-          api: _currentSource.httpApi,
+          api: _currentSource.httpsApi,
           vid: widget.videoId,
           tid: _videoModel.tid,
           type: _videoModel.type,
@@ -222,6 +224,30 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         }
       }
     }
+  }
+
+  Widget _buildPlayerError(BuildContext context, String errorMessage) {
+//    return Text(errorMessage);
+    return Stack(
+      children: [
+        Align(
+          alignment: Alignment.topLeft,
+          child: BackButton(color: Colors.white,),
+        ),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, color: Colors.white,),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Text('抱歉，视频错误', style: TextStyle(color: Colors.white),),
+              ),
+            ],
+          )
+        )
+      ],
+    );
   }
 
   Widget _buildText(String str) {
@@ -463,67 +489,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         ],
       ),
     );
-//    return Container(
-//      child: _videoModel != null ? DefaultTabController(
-//        length: _videoModel.sources.length,
-//        child: Column(
-//          children: [
-//            TabBar(
-//              isScrollable: true,
-//              tabs: _videoModel.sources.map((e) => Tab(text: e.name,)).toList(),
-//              onTap: (index) {
-//                setState(() {
-//                  _sourceIndex = index;
-//                });
-//              },
-//            ),
-//            Padding(
-//              padding: EdgeInsets.only(left: 6, bottom: 10),
-//              child: Text('选集', style: TextStyle(
-//                  color: KkColors.primaryWhite,
-//                  fontSize: 18,
-//                  height: 1
-//              ),),
-//            ),
-//            TabBarView(
-//              /// 选集
-//              children: [
-//                SizedBox(
-//                  height: 100,
-//                  child: Padding(
-//                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//                    child: Wrap(
-//                      spacing: 8,
-//                      runSpacing: 8,
-//                      children: video.anthologies.map((e) {
-//                        return SizedBox(
-//                          height: 36,
-//                          child: RaisedButton(
-//                            elevation: 0,
-//                            highlightElevation: 4,
-//                            padding: EdgeInsets.symmetric(horizontal: 8),
-//                            color: _url == e.url ? KkColors.primaryRed : null,
-//                            child: Text(e.name, style: TextStyle(
-//                                color: _url == e.url ? Colors.white : null,
-//                                fontSize: 14,
-//                                fontWeight: FontWeight.normal
-//                            ),),
-//                            onPressed: () async {
-//                              if (_url == e.url) return;
-//                              _startPlay(e.url, video.name + '  ' + e.name);
-//                            },
-//                          ),
-//                        );
-//                      }).toList(),
-//                    ),
-//                  ),
-//                ),
-//              ],
-//            ),
-//          ],
-//        ),
-//      ) : Container(),
-//    );
   }
 
   Widget _buildLabelText(String label, String text) {

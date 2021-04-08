@@ -15,7 +15,6 @@ class DBHelper {
   final String _columnName = 'name';
   final String _columnUrl = 'url';
   final String _columnType = 'type';
-  final String _columnCurrentSourceIndex = 'source';
 
   /* 视频资源表 */
   final String _sourceTableName = 'table_source';
@@ -37,6 +36,7 @@ class DBHelper {
 
   /* 记录表 */
   final String _recordTableName = 'table_record';
+  final String _columnCurrentSourceIndex = 'currentSourceIndex';
   final String _columnCollected = 'collected';
   final String _columnAnthologyName = 'anthologyName';
   final String _columnPlayedTime = 'playedTime';
@@ -62,7 +62,7 @@ class DBHelper {
 
     String databasesPath  = await getDatabasesPath();
     String path = join(databasesPath, Constant.key_db_name);
-    _db = await openDatabase(path, version: 3, onCreate: (Database db, int version) async {
+    _db = await openDatabase(path, version: 2, onCreate: (Database db, int version) async {
       // 创建资源表
       await db.execute('''
         create table $_sourceTableName (
@@ -100,7 +100,7 @@ class DBHelper {
           $_columnVid VARCHAR (32) not null, 
           $_columnTid VARCHAR (32),
           $_columnType VARCHAR (64),
-          $_columnCurrentSourceIndex VARCHAR (16),
+          $_columnCurrentSourceIndex INTEGER NOT NULL DEFAULT 0,
           $_columnName TEXT,
           $_columnPic TEXT not null,
           $_columnCollected INTEGER NOT NULL DEFAULT 0,
@@ -112,11 +112,11 @@ class DBHelper {
         )
       ''');
     }, onUpgrade: (Database db, int oldVersion, int newVersion) async{
-      if (oldVersion <= 2) {
-        print("updateTable version $oldVersion $newVersion");
-        await db.execute(
-            '''alter table $_recordTableName add column $_columnCurrentSourceIndex VARCHAR (16) ''');
-      }
+//      if (oldVersion <= 2) {
+//        print("updateTable version $oldVersion $newVersion");
+//        await db.execute(
+//            '''alter table $_recordTableName add column $_columnCurrentSourceIndex INTEGER NOT NULL DEFAULT 0 ''');
+//      }
     });
   }
 

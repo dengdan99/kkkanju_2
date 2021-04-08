@@ -19,7 +19,7 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="kkkanju2"
+        android:label="kk看剧"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_config"
         android:icon="@mipmap/ic_launcher">

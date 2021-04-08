@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/router/application.dart';
@@ -17,24 +18,26 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   DBHelper _db = DBHelper();
   bool _firstLoading = false;
+  EasyRefreshController _controller;
   List<RecordModel> _recordList = [];
   List<_LevelModel> _levelList = [
     _LevelModel(title: '电影推荐', level: 8, videos: []),
     _LevelModel(title: '美剧推荐', level: 5, videos: []),
     _LevelModel(title: '韩剧推荐', level: 6, videos: []),
-    _LevelModel(title: '老K推荐', level: 7, videos: []),
+    _LevelModel(title: 'KK推荐', level: 7, videos: []),
   ];
 
   @override
   void initState() {
     super.initState();
+    _controller = EasyRefreshController();
     _initData();
   }
 
   Future<void> _initData() async {
-    setState(() {
-      _firstLoading = true;
-    });
+//    setState(() {
+//      _firstLoading = true;
+//    });
     List record = await _db.getRecordList(pageNum: 0, pageSize: 20, played: true);
 //    if (!mounted) return 0;
     List<List<VideoModel>> list = await Future.wait(
@@ -236,18 +239,25 @@ class _HomePageState extends State<HomePage> {
       }
     });
     return _firstLoading
-        ? Center(child: CircularProgressIndicator())
-        : CustomScrollView(
-      slivers: mainColum
+        ? Center(
+        child: CircularProgressIndicator()
+    )
+        : EasyRefresh.custom(
+      controller: _controller,
+      slivers: mainColum,
+      header: ClassicalHeader(
+          textColor: KkColors.primaryWhite,
+          infoColor: KkColors.primaryRed,
+          refreshText: '下拉刷新',
+          refreshReadyText: '释放刷新',
+          refreshingText: '正在刷新...',
+          refreshedText: '已获取最新数据',
+          infoText: '更新于%T'
+      ),
+      onRefresh: () async {
+        await _initData();
+      },
     );
-
-//    return _firstLoading
-//        ? Center(
-//      child: CircularProgressIndicator()
-//    )
-//        : ListView(
-//      children: mainColum,
-//    );
   }
 }
 

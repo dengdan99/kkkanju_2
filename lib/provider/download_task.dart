@@ -166,7 +166,7 @@ class DownloadTaskProvider with ChangeNotifier {
         tid: video.tid,
         name: name,
         url: url,
-        api: context.read<SourceProvider>().currentSource?.httpApi,
+        api: context.read<SourceProvider>().currentSource?.httpsApi,
         type: video.type,
         pic: video.pic,
         fileId: fileId,
