@@ -5,6 +5,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
@@ -133,7 +134,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       // 为了自适应视频比例
       await _controller.initialize();
       setState(() {
-        _aspectRatio = _controller.value.aspectRatio;
+//        _aspectRatio = _controller.value.aspectRatio;
       });
     } catch(err) {
       print(err);
@@ -150,9 +151,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       autoPlay: true,
       startAt: position,
       allowedScreenSleep: false,
-      aspectRatio: _aspectRatio,
+      allowFullScreen: true,
+      aspectRatio: _controller?.value?.aspectRatio,
       playbackSpeeds: [0.5, 1, 1.25, 1.5, 2],
       errorBuilder: _buildPlayerError,
+      deviceOrientationsAfterFullScreen: [
+        DeviceOrientation.portraitUp
+      ],
       customControls: VideoControls(
         title: name,
         actions: _buildDownload(url, name),

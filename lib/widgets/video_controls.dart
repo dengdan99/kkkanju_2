@@ -445,11 +445,8 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
             BackButton(
               color: Colors.white,
               onPressed: () {
-                if (chewieController.isFullScreen) {
-                  chewieController.exitFullScreen();
-                } else {
-                  Navigator.of(context).pop();
-                }
+//                  chewieController.exitFullScreen();
+                Navigator.maybePop(context);
               },
             ),
             Expanded(
