@@ -50,6 +50,7 @@ class XmlUtil {
     int index = 1;
     List<Anthology> defAnthologies = [];
     source.findElements('dd').forEach((element) {
+      String sourceName = element.getAttribute('flag');
       String str = element.text;
       List<Anthology> anthologies = [];
       if (str != null) {
@@ -60,7 +61,8 @@ class XmlUtil {
             anthologies.add(Anthology(name: null, url: s));
           }
         });
-        sources.add(VideoSource(name: '资源' + index.toString(), anthologies: anthologies));
+        print(sourceName);
+        sources.add(VideoSource(name: sourceName + '资源', anthologies: anthologies));
         defAnthologies = anthologies;
         index ++;
       }
