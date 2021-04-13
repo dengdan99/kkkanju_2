@@ -17,7 +17,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   DBHelper _db = DBHelper();
-  bool _firstLoading = false;
+  bool _firstLoading = true;
   EasyRefreshController _controller;
   List<RecordModel> _recordList = [];
   List<_LevelModel> _levelList = [

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +25,10 @@ class MyApp extends StatelessWidget {
     Routers.configureRoutes(router);
     Application.router = router;
   }
+
+  /// ga 统计
+  static FirebaseAnalytics analytics = FirebaseAnalytics();
+  static FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +52,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             onGenerateRoute: Application.router.generator,
+            navigatorObservers: [observer],
             theme: ThemeData.light().copyWith(
               appBarTheme: AppBarTheme(
                 brightness: Brightness.dark,
@@ -72,12 +78,11 @@ class MyApp extends StatelessWidget {
 }
 
 void main() async {
+  /// admob 初始化
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
 
-  /// 创建全局变量，flutter会根据系统平台自动读取第五步下载的对应配置文件
-  final FirebaseAnalytics analytics = FirebaseAnalytics();
-  final FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+  await Firebase.initializeApp();
 
   /// 状态栏高亮
   SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(

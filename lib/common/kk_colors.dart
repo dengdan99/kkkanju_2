@@ -8,6 +8,8 @@ class KkColors {
   static Color greyInBalck = Colors.white60;
   static Color placeholder = ColorsUtil.hexColor(0x808082);
   static Color primaryRed = ColorsUtil.hexColor(0xd51373);
+  static Color lightRed = ColorsUtil.hexColor(0xfcb8da);
+  static Color primaryRedgrep = ColorsUtil.hexColor(0xd51373);
   static Color primaryWhite = Colors.white;
   static Color descWhite = ColorsUtil.hexColor(0x808082);
 }

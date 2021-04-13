@@ -153,7 +153,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       allowedScreenSleep: false,
       allowFullScreen: true,
       aspectRatio: _controller?.value?.aspectRatio,
-      playbackSpeeds: [0.5, 1, 1.25, 1.5, 2],
+      playbackSpeeds: [0.5, 1, 1.5, 2, 2.5, 3, 4],
       errorBuilder: _buildPlayerError,
       deviceOrientationsAfterFullScreen: [
         DeviceOrientation.portraitUp

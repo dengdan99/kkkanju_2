@@ -40,7 +40,7 @@ class HttpUtils {
       return XmlUtil.parseCategoryList(xmlStr);
     } catch (e, s) {
       print(s);
-      BotToast.showText(text: e.error ?? e.toString());
+      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
     }
     return [];
   }
@@ -72,7 +72,7 @@ class HttpUtils {
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
       print(s);
-      BotToast.showText(text: e.error ?? e.toString());
+      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
     }
     return videos;
   }
@@ -88,7 +88,7 @@ class HttpUtils {
       video = XmlUtil.parseVideo(xmlStr);
     } catch (e, s) {
       print(s);
-      BotToast.showText(text: e.error ?? e.toString());
+      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
     }
     return video;
   }
@@ -116,7 +116,7 @@ class HttpUtils {
       }
     } catch (e, s) {
       print(s);
-      BotToast.showText(text: e.error ?? e.toString());
+      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
     }
 
     return videos;
@@ -133,7 +133,7 @@ class HttpUtils {
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
       print(s);
-      BotToast.showText(text: e.error ?? e.toString());
+      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
     }
     return videos;
   }
@@ -151,7 +151,7 @@ class HttpUtils {
       }
     }  catch (e, s) {
       print(s);
-      BotToast.showText(text: e.error ?? e.toString());
+      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
     }
     return version;
   }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:screen/screen.dart';
 import 'package:video_player/video_player.dart';
 import 'material_progress_bar.dart';
@@ -415,8 +416,8 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
           },
           colors: chewieController.materialProgressColors ??
               ChewieProgressColors(
-                  playedColor: Theme.of(context).accentColor,
-                  handleColor: Theme.of(context).accentColor,
+                  playedColor: KkColors.primaryWhite,
+                  handleColor: KkColors.primaryRed,
                   bufferedColor: Theme.of(context).backgroundColor,
                   backgroundColor: Theme.of(context).disabledColor),
         ),
@@ -582,7 +583,6 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
     return GestureDetector(
       onTap: () async {
         _hideTimer?.cancel();
-
         final chosenSpeed = await showModalBottomSheet<double>(
           context: context,
           isScrollControlled: true,
@@ -760,36 +760,37 @@ class _PlaybackSpeedDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color selectedColor = Theme.of(context).primaryColor;
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const ScrollPhysics(),
-      itemBuilder: (context, index) {
-        final _speed = _speeds[index];
-        return ListTile(
-          dense: true,
-          title: Row(
-            children: [
-              if (_speed == _selected)
-                Icon(
-                  Icons.check,
-                  size: 20.0,
-                  color: selectedColor,
-                )
-              else
-                Container(width: 20.0),
-              const SizedBox(width: 16.0),
-              Text(_speed.toString()),
-            ],
-          ),
-          selected: _speed == _selected,
-          onTap: () {
-            Navigator.of(context).pop(_speed);
-          },
-        );
-      },
-      itemCount: _speeds.length,
+    return Container(
+      color: KkColors.mainBlackBg,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics: const ScrollPhysics(),
+        itemBuilder: (context, index) {
+          final _speed = _speeds[index];
+          return ListTile(
+            dense: true,
+            title: Row(
+              children: [
+                if (_speed == _selected)
+                  Icon(
+                    Icons.check,
+                    size: 20.0,
+                    color: KkColors.primaryRed,
+                  )
+                else
+                  Container(width: 20.0),
+                const SizedBox(width: 16.0),
+                Text(_speed.toString(), style: TextStyle(color: _speed == _selected ? KkColors.primaryRed : KkColors.primaryWhite),),
+              ],
+            ),
+            selected: _speed == _selected,
+            onTap: () {
+              Navigator.of(context).pop(_speed);
+            },
+          );
+        },
+        itemCount: _speeds.length,
+      ),
     );
   }
 }
