@@ -125,11 +125,11 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildHomeRecordItem(RecordModel video) {
     RecordModel model = video;
-    String recordStr = '上次看到';
+    String recordStr = '看到';
     if (model.progress > 0.99) {
       recordStr += '  ' + '播放完毕';
     } else {
-      recordStr += '    ' + (model.progress * 100).toStringAsFixed(2) + '%';
+      recordStr += '  ' + (model.progress * 100).toStringAsFixed(2) + '%';
     }
 
     return Column(

@@ -30,6 +30,18 @@ class HttpUtils {
   static String videoPath = "/provide/vod";
   static String versionPath = "/index/version";
 
+  static void errorHandler(err) {
+    DioError dioError;
+    if (err is DioError) {
+      dioError = err;
+      print('接口错误: ' + dioError.request.baseUrl + dioError.request.path + dioError.request.queryParameters.toString());
+      print(dioError.toString());
+      BotToast.showText(text: '网络或接口异常');
+    } else {
+      BotToast.showText(text: err.toString());
+    }
+  }
+
   static Future<List<CategoryModel>> getCategoryList() async {
     try {
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
@@ -39,8 +51,7 @@ class HttpUtils {
       String xmlStr = response.data.toString();
       return XmlUtil.parseCategoryList(xmlStr);
     } catch (e, s) {
-      print(s);
-      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
+      errorHandler(e);
     }
     return [];
   }
@@ -71,8 +82,7 @@ class HttpUtils {
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
-      print(s);
-      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
+      errorHandler(e);
     }
     return videos;
   }
@@ -87,8 +97,7 @@ class HttpUtils {
       String xmlStr = response.data.toString();
       video = XmlUtil.parseVideo(xmlStr);
     } catch (e, s) {
-      print(s);
-      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
+      errorHandler(e);
     }
     return video;
   }
@@ -115,8 +124,7 @@ class HttpUtils {
         videos = XmlUtil.parseVideoList(xmlStr);
       }
     } catch (e, s) {
-      print(s);
-      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
+      errorHandler(e);
     }
 
     return videos;
@@ -132,8 +140,7 @@ class HttpUtils {
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
-      print(s);
-      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
+      errorHandler(e);
     }
     return videos;
   }
@@ -150,8 +157,7 @@ class HttpUtils {
         version = VersionModel.fromJson(json['info']);
       }
     }  catch (e, s) {
-      print(s);
-      BotToast.showText(text: e.massage ?? e.error ?? e.toString());
+      errorHandler(e);
     }
     return version;
   }

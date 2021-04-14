@@ -50,6 +50,9 @@ class SearchBarDelegate extends SearchDelegate<String> {
       inputDecorationTheme: InputDecorationTheme(
         fillColor: KkColors.greyInBalck,
         hintStyle: TextStyle(
+          color: KkColors.descWhite,
+        ),
+        labelStyle: TextStyle(
           color: KkColors.primaryWhite,
         ),
         border: InputBorder.none,
@@ -65,8 +68,12 @@ class SearchBarDelegate extends SearchDelegate<String> {
         icon: Icon(Icons.clear),
         //将搜索内容置为空
         onPressed: () {
-          query = "";
-          showSuggestions(context);
+          if (query == "") {
+            close(context, null);
+          } else {
+            query = "";
+            showSuggestions(context);
+          }
         },
       )
     ];
@@ -139,7 +146,9 @@ class SearchBarDelegate extends SearchDelegate<String> {
             }
           } else {
             return Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                backgroundColor: KkColors.mainBlackBg,
+              ),
             );
           }
         }
@@ -149,7 +158,7 @@ class SearchBarDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     return Container();
-//      Column(
+//     return Column(
 //      children: <Widget>[
 //        Container(
 //          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),

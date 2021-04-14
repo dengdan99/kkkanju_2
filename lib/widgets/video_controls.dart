@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:screen/screen.dart';
 import 'package:video_player/video_player.dart';
@@ -45,6 +46,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
   Timer _showAfterExpandCollapseTimer;
   bool _dragging = false;
   bool _displayTapped = false;
+  bool _manualForward = false;
 
   final barHeight = 48.0;
   final marginSize = 5.0;
@@ -154,7 +156,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
       } else {
         _cancelAndRestartTimer();
 
-        if (!controller.value.initialized) {
+        if (!controller.value.isInitialized) {
           controller.initialize().then((_) {
             controller.play();
             playPauseIconAnimationController.forward();
@@ -170,9 +172,37 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
     });
   }
 
+  void _onLongPressStart(LongPressStartDetails details) {
+    double speed = 3;
+    if (controller.value.isPlaying) {
+      _manualForward = true;
+      HapticFeedback.mediumImpact();
+      controller.setPlaybackSpeed(speed);
+      showTooltip(Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Icon(
+            Icons.fast_forward,
+            color: Colors.white,
+            size: 40.0,
+          ),
+          Text(
+            "$speed 倍速",
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ));
+    }
+  }
+  void _onLongPressEnd(LongPressEndDetails details) {
+    controller.setPlaybackSpeed(1.0);
+    _manualForward = false;
+    hideTooltip();
+  }
+
   OverlayEntry _tipOverlay;
 
-  void showTooltip(Widget w) {
+  void showTooltip(Widget w, {height: 100, width: 100}) {
     hideTooltip();
     _tipOverlay = OverlayEntry(
         builder: (BuildContext context) {
@@ -416,8 +446,8 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
           },
           colors: chewieController.materialProgressColors ??
               ChewieProgressColors(
-                  playedColor: KkColors.primaryWhite,
-                  handleColor: KkColors.primaryRed,
+                  playedColor: KkColors.primaryRed,
+                  handleColor: KkColors.primaryWhite,
                   bufferedColor: Theme.of(context).backgroundColor,
                   backgroundColor: Theme.of(context).disabledColor),
         ),
@@ -714,6 +744,8 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
       },
       child: GestureDetector(
         onTap: () => _cancelAndRestartTimer(),
+        onLongPressStart: (details) => _onLongPressStart(details),
+        onLongPressEnd: (details) => _onLongPressEnd(details),
         onDoubleTap: () => _playPause(),
         onHorizontalDragStart: _onHorizontalDragStart,
         onHorizontalDragUpdate: _onHorizontalDragUpdate,
@@ -726,16 +758,14 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
           child: Column(
             children: [
               _buildTopBar(context),
-              (_latestValue != null &&
-                !_latestValue.isPlaying &&
-                _latestValue.duration == null ||
-                _latestValue.isBuffering)
-              ? const Expanded(
+              if (_latestValue.isBuffering)
+                const Expanded(
                   child: Center(
                     child: CircularProgressIndicator(),
                   ),
-              )
-              : _buildHitArea(),
+                )
+              else
+                _buildHitArea(),
               _buildBottomBar(context),
             ],
           ),

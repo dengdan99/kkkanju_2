@@ -232,7 +232,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   Widget _buildPlayerError(BuildContext context, String errorMessage) {
-//    return Text(errorMessage);
+    print('视频播放错误：'  + errorMessage);
     return Stack(
       children: [
         Align(
@@ -246,8 +246,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               Icon(Icons.error, color: Colors.white,),
               Padding(
                 padding: EdgeInsets.only(top: 10),
-                child: Text('抱歉，视频错误', style: TextStyle(color: Colors.white),),
+                child: Text('抱歉，视频或网络错误', style: TextStyle(color: Colors.white),),
               ),
+//              Padding(
+//                padding: EdgeInsets.only(top: 10),
+//                child: Text(errorMessage, style: TextStyle(color: Colors.white70),),
+//              ),
             ],
           )
         )

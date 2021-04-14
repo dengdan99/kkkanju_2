@@ -103,12 +103,16 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             Icons.search,
             color: KkColors.placeholder,
           ),
-          Text(
-            text,
-            style: TextStyle(
-              color: KkColors.placeholder,
+          Flexible(
+            fit: FlexFit.loose,
+            child: Text(
+              text,
+              style: TextStyle(
+                color: KkColors.placeholder,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
-          )
+          ),
         ],
       ),
     );
@@ -134,7 +138,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         }),
         centerTitle: true,
         title: TextButton(
-          child: _searchInput('请输入需要搜索的关键字'),
+          child: _searchInput('请输入搜索的关键字,片名，演员'),
           onPressed: () {
             showSearch(context: context, delegate: SearchBarDelegate(hintText: '搜索【${_currentSource.name}】的资源'));
           },
