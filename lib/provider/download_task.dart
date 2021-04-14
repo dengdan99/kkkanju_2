@@ -69,7 +69,6 @@ class DownloadTaskProvider with ChangeNotifier {
     // 2. 绑定监听
     IsolateNameServer.registerPortWithName(_port.sendPort, 'downloader_send_port');
     _port.listen((dynamic data) async {
-      print(data);
       if (_currentTask == null) return;
 
       int status = data["status"];
@@ -93,7 +92,7 @@ class DownloadTaskProvider with ChangeNotifier {
           _downloadNext();
           break;
         case 3:
-          BotToast.showText(text:"【${_currentTask.name}】下载失败！！！");
+          BotToast.showText(text:"【${_currentTask.name}】下载失败!");
           _db.updateDownloadByUrl(_currentTask.url, status: DownloadStatus.FAIL);
           _downloadList = await _db.getDownloadList();
           _currentTask = null;
