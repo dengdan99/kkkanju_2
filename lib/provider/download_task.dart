@@ -39,12 +39,12 @@ class DownloadTaskProvider with ChangeNotifier {
   static successCallback(dynamic args) {
     final SendPort send = IsolateNameServer.lookupPortByName('downloader_send_port');
     send.send({"status": 2, ...args});
-    BotToast.showText(text: '下载成功', align: Alignment.center);
+//    BotToast.showText(text: '下载成功', align: Alignment.center);
   }
   static errorCallback(dynamic args) {
     final SendPort send = IsolateNameServer.lookupPortByName('downloader_send_port');
     send.send({"status": 3, "url": args["url"]});
-    BotToast.showText(text: '下载失败', align: Alignment.center);
+//    BotToast.showText(text: '下载失败', align: Alignment.center);
   }
 
   ///

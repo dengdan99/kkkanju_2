@@ -35,20 +35,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _initData() async {
-//    setState(() {
-//      _firstLoading = true;
-//    });
     List record = await _db.getRecordList(pageNum: 0, pageSize: 20, played: true);
-//    if (!mounted) return 0;
-    List<List<VideoModel>> list = await Future.wait(
-      _levelList.map((e) => HttpUtils.getLevelVideo(e.level)).toList()
-    );
+    _levelList.asMap().forEach((index, _levelItem) {
+      HttpUtils.getLevelVideo(_levelItem.level).then((res) {
+        setState(() {
+          _levelList[index].videos = res;
+          _firstLoading = false;
+        });
+      });
+    });
     setState(() {
-      _firstLoading = false;
-      _levelList = _levelList.asMap().keys.map((index) {
-        _levelList[index].videos = list[index];
-        return _levelList[index];
-      }).toList();
       _recordList = record;
     });
   }

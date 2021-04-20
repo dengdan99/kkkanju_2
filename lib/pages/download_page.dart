@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
+import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:provider/provider.dart';
 import 'package:kkkanju_2/models/download_model.dart';
 import 'package:kkkanju_2/provider/download_task.dart';
@@ -279,6 +280,7 @@ class _DownloadPageState extends State<DownloadPage> with SingleTickerProviderSt
                 CircularProgressIndicator(
                   value: currentTask != null && model.url == currentTask.url ? currentTask.progress : model.progress,
                   strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation(KkColors.primaryRed),
                   backgroundColor: Color(0xfff0f0f0),
                 ),
                 Icon(model.status == DownloadStatus.RUNNING ? Icons.pause : Icons.file_download, size: 20, color: Colors.grey,),

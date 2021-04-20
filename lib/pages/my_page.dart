@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,9 @@ class MyPage extends StatefulWidget {
 class _MyPageState extends State<MyPage> {
 
   RewardedAd myRewarded;
+  BannerAd myBannerAd;
+  bool _bannerAdLoading = true;
+  AdWidget adWidget;
 
   List<_ListItemInfo> _items = <_ListItemInfo>[
     _ListItemInfo(title: '下载记录', icon: Icons.file_download, route: Routers.downloadPage),
@@ -25,13 +30,18 @@ class _MyPageState extends State<MyPage> {
 
   @override
   void initState() {
+    /// 激励广告
     myRewarded = RewardedAd(
-//      adUnitId: 'ca-app-pub-3940256099942544/5224354917', // 激励测试广告
-    adUnitId: 'ca-app-pub-6001242100944185/7116987162',
-      request: AdRequest(),
+      adUnitId: Platform.isIOS ? 'ca-app-pub-6001242100944185/4086433480' : 'ca-app-pub-6001242100944185/7116987162',
+//      adUnitId: 'ca-app-pub-3940256099942544/5224354917',
+      request: AdRequest(testDevices: ['7ACB3A77CBF29DD30773DE4170923AA6']),
       listener: AdListener(
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          print('=======激励广告加载错误 error');
+          print(error);
+        },
         onAdLoaded: (Ad ad) {
-          print('ad loaded');
           _ListItemInfo adButton = _ListItemInfo(title: '看广告支持一下', icon: Icons.thumb_up);
           setState(() {
             _items.add(adButton);
@@ -45,6 +55,28 @@ class _MyPageState extends State<MyPage> {
       ),
     );
     myRewarded.load();
+
+    /// 横幅广告
+    myBannerAd = BannerAd(
+      size: AdSize.banner,
+      adUnitId: Platform.isIOS ? 'ca-app-pub-6001242100944185/5942133143' : 'ca-app-pub-6001242100944185/3785623530',
+//      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      request: AdRequest(testDevices: ['7ACB3A77CBF29DD30773DE4170923AA6']),
+      listener: AdListener(
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          print('=======横幅广告加载错误 error');
+          print(error);
+        },
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _bannerAdLoading = false;
+          });
+        }
+      ),
+    );
+    myBannerAd.load();
+    adWidget = AdWidget(ad: myBannerAd);
     super.initState();
   }
 
@@ -52,14 +84,17 @@ class _MyPageState extends State<MyPage> {
   void dispose() {
     if (myRewarded != null) {
       myRewarded.dispose();
-    };
+    }
+    if (myBannerAd != null) {
+      myBannerAd.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: <Widget>[
+      children: [
 //        UserAccountsDrawerHeader(
 //          currentAccountPicture: CircleAvatar(
 //            backgroundImage: AssetImage('assets/image/placeholder-cover.jpg'),
@@ -83,6 +118,14 @@ class _MyPageState extends State<MyPage> {
 //            color: Theme.of(context).primaryColor,
 //          ),
 //        ),
+        _bannerAdLoading
+        ? Container()
+        : Container(
+          alignment: Alignment.center,
+          child: adWidget,
+          width: myBannerAd.size.width.toDouble(),
+          height: myBannerAd.size.height.toDouble(),
+        ),
         Expanded(
             child: MediaQuery.removePadding(
               removeTop: true,

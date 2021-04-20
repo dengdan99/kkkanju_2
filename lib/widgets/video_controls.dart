@@ -173,7 +173,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
   }
 
   void _onLongPressStart(LongPressStartDetails details) {
-    double speed = 3.0;
+    double speed = 2.0;
     if (controller.value.isPlaying) {
       _manualForward = true;
       HapticFeedback.mediumImpact();

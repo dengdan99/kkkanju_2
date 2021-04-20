@@ -36,7 +36,7 @@ class _SplashPageState extends State<SplashPage> {
     String colorKey = SpHelper.getString(Constant.key_theme_color, defValue: Constant.default_theme_color);
     // 初始化主题颜色
     context.read<AppInfoProvider>().setTheme(colorKey);
-//    SpHelper.remove(Constant.key_current_source);
+    SpHelper.remove(Constant.key_current_source);
     Map<String, dynamic> source = SpHelper.getObject(Constant.key_current_source);
     if (source == null) {
       String sourceJson = await DefaultAssetBundle.of(context).loadString('assets/data/source.json');

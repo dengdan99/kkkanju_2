@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/record_model.dart';
@@ -44,12 +45,37 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   bool _isSingleVideo = false; // 是否单视频,没有选集
   int _cachePlayedSecond = -1; // 临时的播放秒数
   int _sourceIndex = 0;
+  bool _bannerAdLoading = true; // 广告显示
+  BannerAd myBannerAd;
 
   @override
   void initState() {
     super.initState();
+//    _initAd();
     _futureFetch = _getVideoInfo();
   }
+
+  _initAd() async {
+    myBannerAd = BannerAd(
+      size: AdSize.banner,
+      adUnitId:  'ca-app-pub-6001242100944185/6628544763',
+      request: AdRequest(testDevices: ['7ACB3A77CBF29DD30773DE4170923AA6']),
+      listener: AdListener(
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            ad.dispose();
+            print('=======横幅广告加载错误 error');
+            print(error);
+          },
+          onAdLoaded: (Ad ad) {
+            setState(() {
+              _bannerAdLoading = false;
+            });
+          }
+      ),
+    );
+    myBannerAd.load();
+  }
+
 
   Future<VideoModel> _getVideoInfo() async {
     String baseUrl = widget.api;
@@ -74,6 +100,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         String url;
         String name;
         int position = 0;
+        if (!video.sources.contains(_sourceIndex)) {
+          _sourceIndex = 0;
+        }
         VideoSource videoSource = video.sources[_sourceIndex];
         if (_recordModel == null) {
           url = videoSource.anthologies.first.url;
@@ -246,7 +275,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
               Icon(Icons.error, color: Colors.white,),
               Padding(
                 padding: EdgeInsets.only(top: 10),
-                child: Text('抱歉，视频或网络错误', style: TextStyle(color: Colors.white),),
+                child: Text('抱歉，无法播放', style: TextStyle(color: Colors.white),),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Text('请尝试切换资源', style: TextStyle(color: Colors.white),),
               ),
 //              Padding(
 //                padding: EdgeInsets.only(top: 10),
@@ -574,6 +607,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                 ],
               )
             ),
+          ),
+          _bannerAdLoading
+              ? Container()
+              : Container(
+            alignment: Alignment.center,
+            child: AdWidget(ad: myBannerAd),
+            width: myBannerAd.size.width.toDouble(),
+            height: myBannerAd.size.height.toDouble(),
           ),
           Expanded(
             flex: 1,
