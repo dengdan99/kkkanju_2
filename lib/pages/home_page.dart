@@ -15,7 +15,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
   DBHelper _db = DBHelper();
   bool _firstLoading = true;
   EasyRefreshController _controller;
@@ -26,6 +26,9 @@ class _HomePageState extends State<HomePage> {
     _LevelModel(title: '韩剧推荐', level: 6, videos: []),
     _LevelModel(title: 'KK推荐', level: 7, videos: []),
   ];
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -222,6 +225,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     List<Widget> mainColum = [];
     if (_recordList.length > 0) mainColum.add(_bulidMyRecord());
     _levelList.forEach((item) {

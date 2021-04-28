@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -14,12 +15,15 @@ import 'package:kkkanju_2/models/record_model.dart';
 import 'package:kkkanju_2/models/source_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/provider/download_task.dart';
+import 'package:kkkanju_2/provider/mirror_link.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/widgets/video_controls.dart';
 import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
+
+import '../widgets/mirror_dialog.dart';
 
 class VideoDetailPage extends StatefulWidget {
   final String api;
@@ -100,7 +104,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         String url;
         String name;
         int position = 0;
-        if (!video.sources.contains(_sourceIndex)) {
+        if (_sourceIndex > video.sources.length) {
           _sourceIndex = 0;
         }
         VideoSource videoSource = video.sources[_sourceIndex];
@@ -149,12 +153,13 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     });
   }
 
-  void _initController(String url, String name, { int playPosition }) async {
+  void _initController(String url, String name, { int playPosition, bool isFullScreen = false }) async {
 //        url = "http://static.chinameifei.com/group2/M00/2E/C3/dyqVIl_kIm6ABKpkAABSNGvBuCk29.m3u8";
 //        url = "http://iqiyi.cdn22-okzyw.net/20210317/10325_133d4c2a/1200k/hls/index.m3u8";
     //    url = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
 //    url = "https://cloud189-shzh-corp.oos-gdsz.ctyunapi.cn/0ff847e1-d808-4f2f-8023-c4fe4cc945da?response-content-disposition=attachment%3Bfilename%3D%22%C3%A5%C2%AE%C2%9E%C3%A4%C2%B9%C2%A0%C3%A5%C2%8C%C2%BB%C3%A7%C2%94%C2%9F%C3%A6%C2%A0%C2%BC%C3%A8%C2%95%C2%BES17E01.mp4%22&x-amz-CLIENTNETWORK=UNKNOWN&x-amz-CLOUDTYPEIN=CORP&x-amz-CLIENTTYPEIN=UNKNOWN&Signature=NQvsxurLQFyCA5WUwsVxrdG%2BNE4%3D&AWSAccessKeyId=4549320003c8aac9538f&Expires=1617851793&x-amz-limitrate=102400&response-content-type=video/mp4&x-amz-FSIZE=639772394&x-amz-UID=172982920492925&x-amz-UFID=81397312056489820";
     print("播放地址：" + url);
+    print("_controller: " + _controller.toString());
     // 设置资源
     _controller = VideoPlayerController.network(url, videoPlayerOptions: VideoPlayerOptions(
         mixWithOthers: true
@@ -182,14 +187,30 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       allowedScreenSleep: false,
       allowFullScreen: true,
       aspectRatio: _controller?.value?.aspectRatio,
+      fullScreenByDefault: isFullScreen,
       playbackSpeeds: [0.5, 1, 1.5, 2, 2.5, 3, 4],
       errorBuilder: _buildPlayerError,
+//      systemOverlaysAfterFullScreen: [
+//        SystemUiOverlay.top,
+//        SystemUiOverlay.bottom
+//      ],
+//      systemOverlaysOnEnterFullScreen: [],
+//      deviceOrientationsOnEnterFullScreen: [
+//        DeviceOrientation.landscapeLeft,
+//        DeviceOrientation.landscapeRight,
+//      ],
       deviceOrientationsAfterFullScreen: [
         DeviceOrientation.portraitUp
       ],
       customControls: VideoControls(
         title: name,
-        actions: _buildDownload(url, name),
+        playNextVideo: playNextVideoHandler,
+        actions: Row(
+          children: [
+            _buildMirror(url, name),
+            _buildDownload(url, name),
+          ],
+        ),
       )
     );
 
@@ -243,19 +264,31 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       _db.updateRecord(_recordModel.id,
           anthologyName: anthologyName,
           playedTime: _controller.value.position.inMilliseconds,
-          progress: _controller.value.position.inMilliseconds / _controller.value.duration.inMilliseconds
+          progress: _controller.value.position.inMilliseconds / _controller.value.duration.inMilliseconds,
+          currentSourceIndex: _sourceIndex,
       );
     }
 
-    // 多个选集
-    if (_videoModel.anthologies != null && _videoModel.anthologies.length > 1) {
+    if (!_isSingleVideo && _cachePlayedSecond >= _controller.value.duration.inSeconds) {
+      playNextVideoHandler();
+    }
+  }
+
+  /// 播放下一首
+  void playNextVideoHandler() {
+    // print('播放下一首');
+    VideoSource vs = _videoModel.sources[_sourceIndex];
+    List<Anthology> anthologies = vs.anthologies;
+
+    if (anthologies != null && anthologies.length > 1) {
       // 播放到最后，切换下一个视频
-      if (_cachePlayedSecond >= _controller.value.duration.inSeconds) {
-        int index = _videoModel.anthologies.indexWhere((e) => e.url == _url);
-        if (index > -1 && index != (_videoModel.anthologies.length - 1)) {
-          Anthology next = _videoModel.anthologies[index + 1];
-          _startPlay(next.url, _videoModel.name + '  ' + next.name);
+      int index = anthologies.indexWhere((e) => e.url == _url);
+      if (index > -1 && index != (anthologies.length - 1)) {
+        Anthology next = anthologies[index + 1];
+        if (_chewieController.isFullScreen) {
+          _chewieController.exitFullScreen();
         }
+        _startPlay(next.url, _videoModel.name + '  ' + next.name);
       }
     }
   }
@@ -353,7 +386,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                       ),
                     ],
                   )
-
                 ],
               ),
             ),
@@ -410,6 +442,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         /// 资源选择
         _buildAnthology(),
         Divider(
+          height: 0,
           color: Colors.grey.withOpacity(0.5),
         ),
       ]);
@@ -481,6 +514,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     }
     return DefaultTabController(
       length: _videoModel.sources.length,
+      initialIndex: _sourceIndex,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -497,38 +531,51 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             ),
           ),
           Container(
-            padding: EdgeInsets.only(bottom: 5),
-            child: SizedBox(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _videoModel.sources[_sourceIndex].anthologies.map((e) {
-                      return SizedBox(
-                        height: 36,
-                        child: RaisedButton(
-                          elevation: 0,
-                          highlightElevation: 4,
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          color: _url == e.url ? KkColors.primaryRed : null,
-                          child: Text(e.name, style: TextStyle(
-                              color: _url == e.url ? Colors.white : null,
-                              fontSize: 14,
-                              fontWeight: FontWeight.normal
-                          ),),
-                          onPressed: () async {
-                            if (_url == e.url) return;
-                            _startPlay(e.url, _videoModel.name + '  ' + e.name);
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
+            height: 200,
+            child: TabBarView(
+              children: _videoModel.sources.map((e) {
+                return Container(
+                  child: GridView.builder(
+                    padding: EdgeInsets.all(5.0),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 5,
+                      mainAxisExtent: 35,
+                      crossAxisCount: 4,
+                    ),
+                    itemCount: e.anthologies.length,
+                    itemBuilder: (ctx, index) {
+                      Anthology ant = e.anthologies[index];
+                      return _buildAnthologyButton(ant);
+                    }
+                  )
+                );
+              }).toList()
             ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAnthologyButton (Anthology anthology) {
+    return SizedBox(
+      height: 36,
+      child: ElevatedButton(
+        style: ButtonStyle(
+          elevation: MaterialStateProperty.all(0.0),
+          padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 8)),
+          backgroundColor: MaterialStateProperty.all(_url == anthology.url ? KkColors.primaryRed : KkColors.buttonBg),
+        ),
+        child: Text(anthology.name, style: TextStyle(
+            color: _url == anthology.url ? Colors.white : null,
+            fontSize: 14,
+            fontWeight: FontWeight.normal
+        ),),
+        onPressed: () async {
+          if (_url == anthology.url) return;
+          _startPlay(anthology.url, _videoModel.name + '  ' + anthology.name);
+        },
       ),
     );
   }
@@ -555,6 +602,33 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         )
     );
   }
+
+  GestureDetector _buildMirror(String url, String name) {
+    return GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (content) {
+            return MirrorDialog(url: url, videoName: name, playerControls: _controller);
+          },
+        );
+      },
+      child: Container(
+        height: 48,
+        color: Colors.transparent,
+        margin: EdgeInsets.only(left: 8.0, right: 4.0),
+        padding: EdgeInsets.only(
+            left: 12.0,
+            right: 12.0
+        ),
+        child: Icon(
+          Icons.mobile_screen_share,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
 
   GestureDetector _buildDownload(String url, String name) {
     return GestureDetector(
@@ -583,6 +657,74 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     );
   }
 
+  Widget _buildPlayerArea() {
+    return Consumer<MirrorLinkProvider>(builder: (ctx, mirrorLinkProvider, child) {
+      bool isMirrorRuning = mirrorLinkProvider.running;
+      if (isMirrorRuning) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text('是否结束投屏', style: TextStyle(color: Colors.black)),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('取消'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text('确定'),
+                          onPressed: () {
+                            mirrorLinkProvider.disconnect();
+                            setState(() {});
+                            Navigator.of(context).pop();
+                          },
+                        )
+                      ],
+                    )
+                  )
+                },
+                child: Icon(
+                  Icons.power_settings_new,
+                  color: KkColors.primaryWhite,
+                  size: 32,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Text(mirrorLinkProvider.selected.name + ' 投屏中', style: TextStyle(color: KkColors.primaryWhite),),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Text(mirrorLinkProvider.videoName, style: TextStyle(color: KkColors.descWhite),),
+              )
+            ],
+          ),
+        );
+      }
+      if (_chewieController != null && _controller != null) {
+        return Chewie(controller: _chewieController);
+      }
+      return Stack(
+        children: [
+          Align(
+            alignment: Alignment.topLeft,
+            child: BackButton(color: Colors.white,),
+          ),
+          Center(
+            child: CircularProgressIndicator(),
+          )
+        ],
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -593,19 +735,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
             child: Container(
               padding: EdgeInsets.only(top: MediaQueryData.fromWindow(window).padding.top),
               color: KkColors.black,
-              child: _chewieController != null && _controller != null
-                ? Chewie(controller: _chewieController)
-                  : Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: BackButton(color: Colors.white,),
-                  ),
-                  Center(
-                    child: CircularProgressIndicator(),
-                  )
-                ],
-              )
+              child: _buildPlayerArea(),
             ),
           ),
           _bannerAdLoading

@@ -13,6 +13,7 @@ class VideoControls extends MaterialControls{
   const VideoControls({
     Key key,
     this.title,
+    this.playNextVideo,
     this.defaultShowTitle = false,
     this.actions,
     this.horizontalGesture = true,
@@ -33,6 +34,9 @@ class VideoControls extends MaterialControls{
 
   /// 是否打开垂直方向手势
   final bool verticalGesture;
+
+  /// 播放下部
+  final Function playNextVideo;
 
   _VideoPlayerControlsState createState() => _VideoPlayerControlsState();
 }
@@ -507,6 +511,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
         child: Row(
           children: <Widget>[
             _buildPlayPause(controller),
+            if (widget.playNextVideo != null) _buildNextVideo(),
             if (chewieController.isLive)
               const Expanded(child: Text('LIVE'))
             else
@@ -517,7 +522,7 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
               _buildProgressBar(),
             if (chewieController.allowPlaybackSpeedChanging)
               _buildSpeedButton(controller),
-            if (chewieController.allowMuting) _buildMuteButton(controller),
+//            if (chewieController.allowMuting) _buildMuteButton(controller),
             if (chewieController.allowFullScreen) _buildExpandButton(),
           ],
         ),
@@ -688,13 +693,34 @@ class _VideoPlayerControlsState extends State<VideoControls> with SingleTickerPr
       child: Container(
         height: barHeight,
         color: Colors.transparent,
-        margin: const EdgeInsets.only(left: 8.0, right: 4.0),
+        margin: const EdgeInsets.only(left: 4.0),
         padding: const EdgeInsets.only(
           left: 12.0,
-          right: 12.0,
+          right: 6.0,
         ),
         child: Icon(
           controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  GestureDetector _buildNextVideo() {
+    return GestureDetector(
+      onTap: () {
+        if (widget.playNextVideo != null) widget.playNextVideo();
+      },
+      child: Container(
+        height: barHeight,
+        color: Colors.transparent,
+        margin: const EdgeInsets.only(right: 4.0),
+        padding: const EdgeInsets.only(
+          left: 6.0,
+          right: 12.0,
+        ),
+        child: Icon(
+          Icons.skip_next,
           color: Colors.white,
         ),
       ),

@@ -9,7 +9,7 @@ class XmlUtil {
     final document = xml.parse(xmlStr);
     final types = document.findAllElements('ty');
     types.forEach((node) {
-      list.add(CategoryModel(id: node.getAttribute('id'), name: node.text));
+      list.add(CategoryModel(id: node.getAttribute('id'), name: node.text, pid: node.getAttribute('pid')));
     });
     return list;
   }

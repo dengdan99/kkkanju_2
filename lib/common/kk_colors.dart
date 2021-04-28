@@ -12,4 +12,5 @@ class KkColors {
   static Color primaryRedgrep = ColorsUtil.hexColor(0xd51373);
   static Color primaryWhite = Colors.white;
   static Color descWhite = ColorsUtil.hexColor(0x808082);
+  static Color buttonBg = Color.fromRGBO(179, 179, 179, 0.3);
 }

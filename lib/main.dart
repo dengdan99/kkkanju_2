@@ -14,6 +14,7 @@ import 'package:kkkanju_2/pages/splash_page.dart';
 import 'package:kkkanju_2/provider/app_info.dart';
 import 'package:kkkanju_2/provider/category.dart';
 import 'package:kkkanju_2/provider/download_task.dart';
+import 'package:kkkanju_2/provider/mirror_link.dart';
 import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SourceProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
         ChangeNotifierProvider(create: (_) => DownloadTaskProvider()),
+        ChangeNotifierProvider(create: (_) => MirrorLinkProvider()),
       ],
       child: Consumer<AppInfoProvider>(
         builder: (context, appInfo, _) {

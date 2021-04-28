@@ -17,7 +17,7 @@ class SortPage extends StatefulWidget {
   _SortPageState createState() => _SortPageState();
 }
 
-class _SortPageState extends State<SortPage> with TickerProviderStateMixin {
+class _SortPageState extends State<SortPage> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   // 滚动控制
   TabController _navController;
   List<CategoryModel> _categoryList = [];
@@ -32,6 +32,9 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin {
   SourceProvider _sourceProvider;
   GlobalKey<AnimatedFloatingActionButtonState> _buttonKey = GlobalKey<AnimatedFloatingActionButtonState>();
   bool _firstLoading = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -62,6 +65,7 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin {
       _categoryList = [];
     });
     List<CategoryModel> list = await HttpUtils.getCategoryList();
+    list.retainWhere((element) => (element.pid != '1' && element.id != '1'));
     setState(() {
       _categoryList = [CategoryModel(id: '', name: '最新')] + list;
       _navController = TabController(length: _categoryList.length, vsync: this);
@@ -214,6 +218,7 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin {
           onLoad: () async {
             _pageNum ++;
             int len = await _getVideoList();
+            print(len);
             if (len < 20) {
               _controller.finishLoad(noMore: true);
             }
@@ -224,6 +229,7 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Container(
       height: double.infinity,
       child: _firstLoading

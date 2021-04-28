@@ -36,7 +36,7 @@ class HttpUtils {
       dioError = err;
       print('接口错误: ' + dioError.request.baseUrl + dioError.request.path + dioError.request.queryParameters.toString());
       print(dioError.toString());
-      BotToast.showText(text: '网络或接口异常');
+      BotToast.showText(text: '网络异常');
     } else {
       BotToast.showText(text: err.toString());
     }

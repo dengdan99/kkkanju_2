@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/source_model.dart';
-import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/pages/home_page.dart';
+import 'package:kkkanju_2/pages/moive_page.dart';
 import 'package:kkkanju_2/pages/my_page.dart';
 import 'package:kkkanju_2/pages/search_bar.dart';
 import 'package:kkkanju_2/pages/sort_page.dart';
@@ -12,9 +12,7 @@ import 'package:kkkanju_2/provider/download_task.dart';
 import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
-import 'package:kkkanju_2/utils/http_utils.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -24,10 +22,12 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   SourceModel _currentSource;
   SourceProvider _sourceProvider;
+  PageController _pageController;
 
   int _currentInde = 0;
   List _pageList = [
     HomePage(),
+    MoviePage(),
     SortPage(),
     MyPage(),
   ];
@@ -36,54 +36,11 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   void initState() {
     _sourceProvider = context.read<SourceProvider>();
     _currentSource = _sourceProvider.currentSource;
+    _pageController = PageController();
     super.initState();
     // 初始化下载器
     context.read<DownloadTaskProvider>().initialize(context);
-    _checkVersion();
-  }
-
-  Future<void> _checkVersion() async {
-    int _localVersion = _currentSource.version;
-    bool onclickOk;
-
-    VersionModel version = await HttpUtils.getLastVersion();
-    if (version == null) return;
-    if (version.enable && version.version > _localVersion) {
-      onclickOk = await _uploadDialog(version);
-      if (onclickOk) {
-        if (version.jumpUrl.isNotEmpty) {
-          launch(version.jumpUrl);
-        } else {
-          launch(version.appUrl);
-        }
-      }
-    }
-  }
-  Future<bool> _uploadDialog(VersionModel version) {
-    List<Widget> buttons = [];
-    if (!version.isForce) {
-      buttons.add(TextButton(
-        child: Text("暂时不升级"),
-        onPressed: () => Navigator.of(context).pop(false),
-      ));
-    }
-    buttons.add(TextButton(
-      child: Text("立即升级"),
-      onPressed: () {
-        Navigator.of(context).pop(true);
-      },
-    ));
-    return showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: Text("发现新的版本", style: TextStyle(color: Colors.black),),
-          content: Text(version.descript, style: TextStyle(color: Colors.black),),
-          actions: buttons,
-        );
-      },
-    );
+    _sourceProvider.checkVersion(context);
   }
 
   Widget _searchInput(String text) {
@@ -147,33 +104,36 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           IconButton(
             icon: Icon(Icons.download_outlined),
             onPressed: () {
-              Application.router.navigateTo(context, Routers.downloadPage);
+              Application.router.navigateTo(context, Routers.downloadPage, transition: TransitionType.cupertino);
             },
           ),
           IconButton(
             icon: Icon(Icons.av_timer),
             onPressed: () {
-              Application.router.navigateTo(context, Routers.playRecordPage);
+              Application.router.navigateTo(context, Routers.playRecordPage, transition: TransitionType.cupertino);
             },
           ),
         ],
       ),
-      body: _pageList[_currentInde],
+      body: PageView.builder(
+        physics: NeverScrollableScrollPhysics(),
+        controller: _pageController,
+        onPageChanged: (index) => setState(() {_currentInde = index;}),
+        itemCount: _pageList.length,
+        itemBuilder: (context, index) => _pageList[index],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: KkColors.black,
         unselectedItemColor: KkColors.primaryWhite,
         currentIndex: _currentInde,
-        onTap: (index) {
-          setState(() {
-            _currentInde = index;
-          });
-        },
+        onTap: (index) => _pageController.jumpToPage(index),
         iconSize: 24.0,
         type: BottomNavigationBarType.fixed,
         fixedColor: KkColors.primaryRed,
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: '首页'),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: '找片'),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam), label: '电影'),
+          BottomNavigationBarItem(icon: Icon(Icons.video_library), label: '看剧'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: '我的'),
         ],
       ),

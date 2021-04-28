@@ -268,6 +268,15 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.6.3"
+  lblelinkplugin:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "5194ee9f7070e4b7da111275827a06902e8c76d9"
+      url: "https://github.com/dengdan99/lblelinkplugin.git"
+    source: git
+    version: "0.0.1"
   m3u8_downloader:
     dependency: "direct main"
     description:

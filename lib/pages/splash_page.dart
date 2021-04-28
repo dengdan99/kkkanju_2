@@ -30,24 +30,23 @@ class _SplashPageState extends State<SplashPage> {
     super.initState();
     _initAsync();
   }
+
+  @override
+  void dispose() {
+    if (_timer != null) _timer.cancel();
+    super.dispose();
+  }
   
   void _initAsync() async {
     await SpHelper.getInstance();
     String colorKey = SpHelper.getString(Constant.key_theme_color, defValue: Constant.default_theme_color);
     // 初始化主题颜色
     context.read<AppInfoProvider>().setTheme(colorKey);
-    SpHelper.remove(Constant.key_current_source);
-    Map<String, dynamic> source = SpHelper.getObject(Constant.key_current_source);
-    if (source == null) {
-      String sourceJson = await DefaultAssetBundle.of(context).loadString('assets/data/source.json');
-      Map json = jsonDecode(sourceJson);
-      SourceModel _sm = SourceModel.fromJson(json);
-//      await _db.insertBatchSource(list);
-//      list = await _db.getSourceList();
-      context.read<SourceProvider>().setCurrentSource(_sm, context);
-    } else {
-      context.read<SourceProvider>().setCurrentSource(SourceModel.fromJson(source), context);
-    }
+    // 获取资源配置
+    String sourceJson = await DefaultAssetBundle.of(context).loadString('assets/data/source.json');
+    Map json = jsonDecode(sourceJson);
+    SourceModel _sm = SourceModel.fromJson(json);
+    context.read<SourceProvider>().setCurrentSource(_sm, context);
 //    删除30天以前的播放记录
     _db.deleteAgoRecord(DateTime.now().subtract(Duration(days: 30)).millisecondsSinceEpoch);
 

@@ -1,3 +1,4 @@
+import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
@@ -179,7 +180,7 @@ class VideoItem extends StatelessWidget {
     return GestureDetector(
         onTap: () {
           Application.router.navigateTo(
-              context, Routers.detailPage + '?id=${video.id}');
+              context, Routers.detailPage + '?id=${video.id}', transition: TransitionType.cupertino);
         },
         child: this.type == 0 ? _buildPortraitItem() : _buildLandscapeItem()
     );

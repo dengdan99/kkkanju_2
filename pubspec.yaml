@@ -55,6 +55,9 @@ dependencies:
   m3u8_downloader:
     git:
       url: https://github.com/dengdan99/m3u8_downloader.git
+  lblelinkplugin:
+    git:
+      url: https://github.com/dengdan99/lblelinkplugin.git
 
 dev_dependencies:
   flutter_test:

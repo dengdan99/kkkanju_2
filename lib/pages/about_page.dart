@@ -46,7 +46,7 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
             Text(
-              _currentSource != null ? ('当前接口版本：' + _currentSource.version.toString()) : '',
+              _currentSource != null ? ('本地接口版本：' + _currentSource.version.toString()) : '',
               style: TextStyle(
                 color: KkColors.black,
               ),
