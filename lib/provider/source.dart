@@ -28,7 +28,7 @@ class SourceProvider with ChangeNotifier {
   void checkVersion(BuildContext ctx) async {
     int _localVersion = _currentSource.version;
     bool onclickOk;
-    print('=====================: ' + _localVersion.toString());
+//    print('=====================: ' + _localVersion.toString());
     VersionModel version = await HttpUtils.getLastVersion();
 //    print(version.toString());
     if (version == null) return;

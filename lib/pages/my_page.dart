@@ -25,7 +25,7 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
   List<_ListItemInfo> _items = [];
 
   @override
-  bool get wantKeepAlive => false;
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
