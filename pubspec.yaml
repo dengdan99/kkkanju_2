@@ -50,6 +50,7 @@ dependencies:
   connectivity: ^2.0.2
   auto_orientation: ^1.0.6
   flutter_easyrefresh: ^2.1.8
+  get_ip: 0.4.0
   xml: ^4.5.1
   bot_toast: ^3.0.5
   m3u8_downloader:

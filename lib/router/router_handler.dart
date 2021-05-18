@@ -8,6 +8,7 @@ import 'package:kkkanju_2/pages/main_page.dart';
 import 'package:kkkanju_2/pages/play_record_page.dart';
 import 'package:kkkanju_2/pages/setting_page.dart';
 import 'package:kkkanju_2/pages/source_manage_page.dart';
+import 'package:kkkanju_2/pages/suggest_page.dart';
 import 'package:kkkanju_2/pages/video_detail_page.dart';
 import 'package:kkkanju_2/utils/fluro_convert_util.dart';
 
@@ -69,5 +70,11 @@ Handler playRecordHandle = Handler(
 Handler aboutUsHandler = Handler(
     handlerFunc: (BuildContext context, Map<String, List<String>> params) {
       return AboutPage();
+    }
+);
+
+Handler suggestHandler = Handler(
+    handlerFunc: (BuildContext context, Map<String, List<String>> params) {
+      return SuggestPage();
     }
 );

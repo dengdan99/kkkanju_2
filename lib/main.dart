@@ -79,6 +79,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// 对一些http请求证书异常作出忽略
+class MyHttpOverrides extends HttpOverrides{
+  @override
+  HttpClient createHttpClient(SecurityContext context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+  }
+}
+
 void main() async {
   /// admob 初始化
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,6 +102,6 @@ void main() async {
 //      statusBarIconBrightness: Brightness.light
   );
   SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-
+  HttpOverrides.global = new MyHttpOverrides();
   runApp(MyApp());
 }

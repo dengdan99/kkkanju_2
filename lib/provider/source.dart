@@ -25,13 +25,14 @@ class SourceProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void checkVersion(BuildContext ctx) async {
+  /// 检查版本
+  Future<bool> checkVersion(BuildContext ctx) async {
     int _localVersion = _currentSource.version;
     bool onclickOk;
 //    print('=====================: ' + _localVersion.toString());
     VersionModel version = await HttpUtils.getLastVersion();
 //    print(version.toString());
-    if (version == null) return;
+    if (version == null) return true;
     if (version.enable && version.version > _localVersion) {
       onclickOk = await _uploadDialog(version, ctx);
       if (onclickOk) {
@@ -41,6 +42,9 @@ class SourceProvider with ChangeNotifier {
           launch(version.appUrl);
         }
       }
+      return false;
+    } else {
+      return true;
     }
   }
 

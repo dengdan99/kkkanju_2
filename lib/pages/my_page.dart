@@ -21,6 +21,7 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
   RewardedAd myRewarded;
   BannerAd myBannerAd;
   bool _bannerAdLoading = true;
+  bool checkLoading = false;
   AdWidget adWidget;
   List<_ListItemInfo> _items = [];
 
@@ -34,6 +35,7 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
         _ListItemInfo(title: '下载记录', icon: Icons.file_download, route: Routers.downloadPage),
         _ListItemInfo(title: '我的收藏', icon: Icons.star, route: Routers.collectionPage),
         _ListItemInfo(title: '播放记录', icon: Icons.access_time, route: Routers.playRecordPage),
+        _ListItemInfo(title: '求片', icon: Icons.question_answer, route: Routers.suggestPage),
         _ListItemInfo(title: '设置', icon: Icons.settings, route: Routers.settingPage),
         _ListItemInfo(title: '检查更新', icon: Icons.update, handler: (item) => _checkUpdate(item)),
         _ListItemInfo(title: '关于我们', icon: Icons.info, route: Routers.aboutUsPage),
@@ -106,8 +108,13 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
     adWidget = AdWidget(ad: myBannerAd);
   }
 
-  _checkUpdate(_ListItemInfo item) {
-    context.read<SourceProvider>().checkVersion(context);
+  void _checkUpdate(_ListItemInfo item) async {
+    checkLoading = true;
+    bool res = await context.read<SourceProvider>().checkVersion(context);
+    checkLoading = false;
+    if (res) {
+      BotToast.showText(text: '已经是最新版本了');
+    }
   }
 
   @override

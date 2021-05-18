@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/record_model.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
@@ -145,8 +146,8 @@ class _CollectionPageState extends State<CollectionPage> {
         context: context,
         builder: (_) {
           return AlertDialog(
-            title: Text('温馨提示'),
-            content: Text('确认取消收藏吗？'),
+            title: Text('温馨提示',  style: TextStyle(color: KkColors.black),),
+            content: Text('确认取消收藏吗？', style: TextStyle(color: KkColors.black),),
             actions: <Widget>[
               FlatButton(
                 child: Text('取消'),

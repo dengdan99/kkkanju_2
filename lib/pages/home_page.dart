@@ -1,3 +1,4 @@
+import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
@@ -101,7 +102,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                           (context, index) => GestureDetector(
-                            onTap: () { Application.router.navigateTo(context,  Routers.detailPage + '?id=${_recordList[index].vid}'); },
+                            onTap: () { Application.router.navigateTo(context,  Routers.detailPage + '?id=${_recordList[index].vid}', transition: TransitionType.cupertino); },
                             child: _buildHomeRecordItem(_recordList[index])
                           ),
                       childCount: _recordList.length,

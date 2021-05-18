@@ -55,7 +55,7 @@ class DownloadTaskProvider with ChangeNotifier {
     WidgetsFlutterBinding.ensureInitialized();
     M3u8Downloader.initialize(
         saveDir: await findSavePath(),
-        isConvert: SpHelper.getBool(Constant.key_m3u8_to_mp4, defValue: true),
+        isConvert: SpHelper.getBool(Constant.key_m3u8_to_mp4, defValue: false),
         showNotification: true,
         threadCount: 3,
         debugMode: false,

@@ -13,6 +13,7 @@ import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/record_model.dart';
 import 'package:kkkanju_2/models/source_model.dart';
+import 'package:kkkanju_2/models/suggest_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/provider/download_task.dart';
 import 'package:kkkanju_2/provider/mirror_link.dart';
@@ -51,6 +52,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   int _sourceIndex = 0;
   bool _bannerAdLoading = true; // 广告显示
   BannerAd myBannerAd;
+  bool isReported = false; // 是否报错过
 
   @override
   void initState() {
@@ -83,10 +85,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   Future<VideoModel> _getVideoInfo() async {
     String baseUrl = widget.api;
+    Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
+    _currentSource = SourceModel.fromJson(sourceJson);
     if (baseUrl == null) {
-      Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
-      _currentSource = SourceModel.fromJson(sourceJson);
       baseUrl = _currentSource.httpsApi + HttpUtils.videoPath;
+    } else {
+      baseUrl = widget.api + HttpUtils.videoPath;
     }
     VideoModel video = await HttpUtils.getVideoById(baseUrl, widget.videoId);
     _videoModel = video;
@@ -128,7 +132,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     return video;
   }
 
-  void _startPlay(String url, String name, { int playPosition }) async {
+  void _startPlay(String url, String name, { int playPosition, bool isFullScreen = false }) async {
     // 切换视频，重置_cachePlayedSecond
     _cachePlayedSecond = -1;
 
@@ -136,7 +140,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       _url = url;
     });
     if (_controller == null) {
-      _initController(url, name, playPosition: playPosition);
+      _initController(url, name, playPosition: playPosition, isFullScreen: isFullScreen);
       return;
     }
     final oldController = _controller;
@@ -146,7 +150,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       // 注销旧的controller
       await oldController.dispose();
       _chewieController?.dispose();
-      _initController(url, name);
+      _initController(url, name, playPosition: playPosition, isFullScreen: isFullScreen);
     });
     setState(() {
       _controller = null;
@@ -159,7 +163,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     //    url = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
 //    url = "https://cloud189-shzh-corp.oos-gdsz.ctyunapi.cn/0ff847e1-d808-4f2f-8023-c4fe4cc945da?response-content-disposition=attachment%3Bfilename%3D%22%C3%A5%C2%AE%C2%9E%C3%A4%C2%B9%C2%A0%C3%A5%C2%8C%C2%BB%C3%A7%C2%94%C2%9F%C3%A6%C2%A0%C2%BC%C3%A8%C2%95%C2%BES17E01.mp4%22&x-amz-CLIENTNETWORK=UNKNOWN&x-amz-CLOUDTYPEIN=CORP&x-amz-CLIENTTYPEIN=UNKNOWN&Signature=NQvsxurLQFyCA5WUwsVxrdG%2BNE4%3D&AWSAccessKeyId=4549320003c8aac9538f&Expires=1617851793&x-amz-limitrate=102400&response-content-type=video/mp4&x-amz-FSIZE=639772394&x-amz-UID=172982920492925&x-amz-UFID=81397312056489820";
     print("播放地址：" + url);
-    print("_controller: " + _controller.toString());
+    print("name: " + name);
     // 设置资源
     _controller = VideoPlayerController.network(url, videoPlayerOptions: VideoPlayerOptions(
         mixWithOthers: true
@@ -220,6 +224,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
 
   @override
   void dispose() {
+    if (myBannerAd != null) {
+      myBannerAd.dispose();
+    }
     _controller?.removeListener(_videoListener);
     _controller?.dispose();
     _chewieController?.dispose();
@@ -275,7 +282,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
   /// 播放下一首
-  void playNextVideoHandler() {
+  void playNextVideoHandler() async {
     // print('播放下一首');
     VideoSource vs = _videoModel.sources[_sourceIndex];
     List<Anthology> anthologies = vs.anthologies;
@@ -285,11 +292,47 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       int index = anthologies.indexWhere((e) => e.url == _url);
       if (index > -1 && index != (anthologies.length - 1)) {
         Anthology next = anthologies[index + 1];
-        if (_chewieController.isFullScreen) {
+        // 切换视频，重置_cachePlayedSecond
+        _cachePlayedSecond = -1;
+        setState(() {
+          _url = next.url;
+        });
+        var isFullScreen = _chewieController.isFullScreen;
+        if (isFullScreen) {
           _chewieController.exitFullScreen();
         }
-        _startPlay(next.url, _videoModel.name + '  ' + next.name);
+        BotToast.showText(text: '正在切换，请稍后', duration: Duration(seconds: 7));
+        await Future.delayed(Duration(seconds: 5));
+        _startPlay(next.url, _videoModel.name + '  ' + next.name, playPosition: 0, isFullScreen: isFullScreen);
       }
+    }
+  }
+
+  void playErrorHandler (VideoModel video) async {
+    if (isReported) {
+      return;
+    }
+    setState(() {
+      isReported = true;
+    });
+    VideoSource vs = _videoModel.sources[_sourceIndex];
+    int index = vs.anthologies.indexWhere((e) => e.url == _url);
+
+    SuggestModel suggestModel = SuggestModel(
+      type: 2,
+      name: '无法播放: ' + video.name + '-' + vs.anthologies[index].name,
+      videoId: video.id,
+      videoName: video.name,
+      sourceName: vs.name,
+      anthologyName: vs.anthologies[index].name,
+      platform: 'android',
+      currentPlayUrl: _url,
+      desc: '用户反馈，无法播放',
+      awardedMarks: 0,
+    );
+    bool res = await HttpUtils.postSuggest(suggestModel);
+    if (res) {
+      BotToast.showText(text: '感谢您的报告');
     }
   }
 
@@ -385,7 +428,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                           style: TextStyle(color: KkColors.primaryWhite, fontSize: 12, height: 1)
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
@@ -451,12 +494,18 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     // 添加简介
     children.addAll([
       Padding(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Text('简介', style: TextStyle(
-            color: KkColors.primaryWhite,
-            fontSize: 18,
-            height: 1
-        )),
+        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('简介', style: TextStyle(
+              color: KkColors.primaryWhite,
+              fontSize: 18,
+              height: 1
+            )),
+            TextButton(onPressed: () => playErrorHandler(video), child: Text(isReported ? '已报告错误' : '报告，无法播放？'))
+          ],
+        ),
       ),
       Padding(
         padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),

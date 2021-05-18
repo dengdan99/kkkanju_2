@@ -14,6 +14,7 @@ class Routers {
   static String collectionPage = '/collection';
   static String playRecordPage = '/playRecord';
   static String aboutUsPage = '/aboutUs';
+  static String suggestPage = '/suggest';
 
   static void configureRoutes(FluroRouter router) {
     router.define(homePage, handler: homeHandler);
@@ -25,6 +26,7 @@ class Routers {
     router.define(collectionPage, handler: collectionHandle);
     router.define(playRecordPage, handler: playRecordHandle);
     router.define(aboutUsPage, handler: aboutUsHandler);
+    router.define(suggestPage, handler: suggestHandler);
     router.notFoundHandler = Handler(
       handlerFunc: (BuildContext context, Map<String,List<String>> params){
         print('错误路由');

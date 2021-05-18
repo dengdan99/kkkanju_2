@@ -37,6 +37,7 @@ class _SettingPageState extends State<SettingPage> {
           ListTile(
             leading: Icon(Icons.wifi),
             title: Text('WiFi自动下载', style: TextStyle(color: KkColors.black)),
+            subtitle: Text('当发现链接到wifi时，后台自动下载', style: TextStyle(color: Colors.black45)),
             trailing: Switch(
                 value: _wifiAutoDownload,
                 onChanged: (v) {
@@ -57,6 +58,7 @@ class _SettingPageState extends State<SettingPage> {
           ListTile(
             leading: Icon(Icons.crop),
             title: Text('M3U8转MP4', style: TextStyle(color: KkColors.black)),
+            subtitle: Text('转MP4可能导致部分视频卡顿或者无法播放', style: TextStyle(color: Colors.black45)),
             trailing: Switch(
                 value: _toMP4,
                 onChanged: (v) {

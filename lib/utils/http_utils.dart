@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:get_ip/get_ip.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/models/category_model.dart';
 import 'package:kkkanju_2/models/source_model.dart';
+import 'package:kkkanju_2/models/suggest_model.dart';
 import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
@@ -40,6 +42,19 @@ class HttpUtils {
     } else {
       BotToast.showText(text: err.toString());
     }
+  }
+
+  static Future<String> getLocalIp() async {
+//    SpHelper.remove(Constant.key_local_ip);
+    String ip = SpHelper.getString(Constant.key_local_ip);
+    if (ip.isNotEmpty) return ip;
+    try {
+      ip = await GetIp.ipAddress;
+    } on ProcessException {
+      ip = 'Failed to get ipAddress.';
+    }
+    SpHelper.putString(Constant.key_local_ip, ip);
+    return ip;
   }
 
   static Future<List<CategoryModel>> getCategoryList() async {
@@ -92,7 +107,6 @@ class HttpUtils {
     try {
       Map<String, dynamic> params = {"ac": "videolist", "at": "xml"};
       params["ids"] = id;
-
       Response response = await dio.get(baseUrl, queryParameters: params);
       String xmlStr = response.data.toString();
       video = XmlUtil.parseVideo(xmlStr);
@@ -160,5 +174,30 @@ class HttpUtils {
       errorHandler(e);
     }
     return version;
+  }
+
+  static Future<bool> postSuggest(SuggestModel report) async {
+    bool result = false;
+    try {
+      Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
+      SourceModel currentSource = SourceModel.fromJson(sourceJson);
+      Response response = await dio.post(currentSource.httpsApi + '/index/suggest', data: await report.toJson());
+      Map json = jsonDecode(response.data.toString());
+      result = json['code'] == 1;
+    } catch (e, s) {
+      errorHandler(e);
+    }
+    return result;
+  }
+
+  static Future<String> getSoupSoulText() async {
+    String text = '';
+    try {
+      Response response = await dio.get('https://v1.alapi.cn/api/soul?format=text');
+      text = response.data.toString();
+    } catch (e, s) {
+      print('接口错误: ' + e.request.baseUrl + e.request.path);
+    }
+    return text;
   }
 }

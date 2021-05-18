@@ -91,7 +91,7 @@ class _SplashPageState extends State<SplashPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(
-                  '$_count 跳转',
+                  '$_count 跳过',
                   style: TextStyle(fontSize: 14, color: Colors.white),
                 ),
                 decoration: BoxDecoration(

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:auto_orientation/auto_orientation.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +26,20 @@ class _LocalVideoPageState extends State<LocalVideoPage> {
   @override
   void initState() {
     super.initState();
-
+    printFileContent();
+    print('本地地址：' + widget.url);
     _initAsync();
+  }
+
+  Future<void> printFileContent() async {
+    var file = File(widget.url);
+    if (!file.existsSync()) {
+      print('文件不存在！！！！！！！！！！！');
+    }
+//    var content = await file.readAsString();
+//    print('==============');
+//    print(content);
+//    print('==============');
   }
 
   void _initAsync() async {
@@ -39,6 +53,7 @@ class _LocalVideoPageState extends State<LocalVideoPage> {
         AutoOrientation.landscapeAutoMode();
       }
     } catch(err) {
+      print('=====================');
       print(err);
     }
     _chewieController = ChewieController(

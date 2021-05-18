@@ -4,6 +4,7 @@ import 'package:kkkanju_2/utils/ColorsUtil.dart';
 class Constant {
   static const String default_theme_color = 'black';
   static const String key_theme_color = 'key_theme_color';
+  static const String key_local_ip = 'key_local_ip';
   static const String key_guide = 'key_guide';
   static const String key_splash_model = 'key_splash_models';
   static const String key_current_source = 'key_current_source';

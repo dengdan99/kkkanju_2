@@ -18,91 +18,77 @@ class SortPage extends StatefulWidget {
 }
 
 class _SortPageState extends State<SortPage> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
-  // 滚动控制
+  bool _firstLoading = false;
   TabController _navController;
   List<CategoryModel> _categoryList = [];
-  String _type = '';
-  // 布局方式
-  bool _isLandscape = false;
+  List<_TabViewData> _tabViewData = [];
 
-  EasyRefreshController _controller;
-  int _pageNum = 1;
-  List _videoList = [];
-  SourceModel _currentSource;
-  SourceProvider _sourceProvider;
-  GlobalKey<AnimatedFloatingActionButtonState> _buttonKey = GlobalKey<AnimatedFloatingActionButtonState>();
-  bool _firstLoading = false;
+  @override
+  void initState() {
+    _initData();
+    super.initState();
+  }
+  @override
+  void dispose() {
+    _navController?.dispose();
+    super.dispose();
+  }
 
   @override
   bool get wantKeepAlive => true;
 
-  @override
-  void initState() {
-    super.initState();
-
-    _navController = TabController(length: _categoryList.length, vsync: this);
-    _controller = EasyRefreshController();
-
-    _sourceProvider = context.read<SourceProvider>();
-    _currentSource = _sourceProvider.currentSource;
-    _sourceProvider.addListener(() {
-      if (!mounted) return;
-      setState(() {
-        _videoList = [];
-        _currentSource = _sourceProvider.currentSource;
-      });
-      _initData();
-    });
-    _initData();
-  }
-
-  // 获取分类
-  Future<void> _getCategoryList() async {
-    if (!mounted) return;
-    _navController?.dispose();
-    setState(() {
-      _type = '';
-      _categoryList = [];
-    });
-    List<CategoryModel> list = await HttpUtils.getCategoryList();
-    list.retainWhere((element) => (element.pid != '1' && element.id != '1'));
-    setState(() {
-      _categoryList = [CategoryModel(id: '', name: '最新')] + list;
-      _navController = TabController(length: _categoryList.length, vsync: this);
-    });
-  }
-  //  获取视频列表
-  Future<int> _getVideoList() async {
-    int hour; // 最近几个小时更新
-    if (_type == null || _type.isEmpty) {
-      hour = 72;
-    }
-    List<VideoModel> videos = await HttpUtils.getVideoList(pageNum: _pageNum, type: _type, hour: hour);
-    if (!mounted) return 0;
-    setState(() {
-      if (this._pageNum <= 1) {
-        _videoList = videos;
-      } else {
-        _videoList += videos;
-      }
-    });
-    return videos.length;
-  }
-
   void _initData() async {
     setState(() {
       _firstLoading = true;
-      _pageNum = 1;
     });
     try {
       await _getCategoryList();
-      await _getVideoList();
+      if (_tabViewData[0] != null) {
+        await _getVideoList(_tabViewData[0]);
+      }
     } catch(e) {
       print(e);
     }
     setState(() {
       _firstLoading = false;
     });
+  }
+
+  // 获取分类 电影的
+  Future<int> _getCategoryList() async {
+    if (!mounted) return 0;
+    _navController?.dispose();
+    setState(() {
+      _categoryList = [];
+    });
+    List<CategoryModel> list = await HttpUtils.getCategoryList();
+    list.retainWhere((element) => (element.pid != '1' && element.id != '1'));
+    setState(() {
+      _categoryList = [CategoryModel(id: '1', name: '最近')] + list;
+      _navController = TabController(length: _categoryList.length, vsync: this);
+      _tabViewData = List.generate(_categoryList.length, (index) => _TabViewData(pageNum: 1, typeId: _categoryList[index].id, list: [], controller: EasyRefreshController()));
+    });
+    _navController.addListener(() {
+      int index = _navController.index;
+      if (_tabViewData[index].list.isEmpty) {
+        _getVideoList(_tabViewData[index]);
+      }
+    });
+  }
+
+  //  获取视频列表
+  Future<int> _getVideoList(_TabViewData viewData) async {
+    List<VideoModel> videos = await HttpUtils.getVideoList(pageNum: viewData.pageNum,  type: viewData.typeId);
+    if (!mounted) return 0;
+    setState(() {
+      if (viewData.pageNum <= 1) {
+        viewData.list = videos;
+      } else {
+        viewData.list += videos;
+      }
+      viewData.firstLoading = false;
+    });
+    return videos.length;
   }
 
   Widget _buildCategoryNav() {
@@ -116,116 +102,68 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin, Auto
                 controller: _navController,
                 isScrollable: true,
                 tabs: _categoryList.map((e) => Tab(text: e.name,)).toList(),
-                onTap: (index) {
-                  this._type = _categoryList[index].id;
-                  this._pageNum = 0;
-                  this._controller.callRefresh();
-                },
               ) : Container(),
             ),
-            Container(
-              height: 20,
-              margin: EdgeInsets.only(left: 4),
-              child: VerticalDivider(
-                color: Colors.grey[200],
-              ),
-            ),
-            Container(
-              width: 40,
-              alignment: Alignment.center,
-              padding: EdgeInsets.only(left: 4),
-              child: IconButton(
-                color: KkColors.descWhite,
-                icon: Icon(_isLandscape ? Icons.list : Icons.table_chart),
-                padding: EdgeInsets.all(4),
-                onPressed: () {
-                  setState(() {
-                    _isLandscape = !_isLandscape;
-                  });
-                },
-              ),
-            )
           ],
         ),
         preferredSize: Size.fromHeight(40)
     );
   }
 
-  Widget _buildVideoList() {
-    return NotificationListener<ScrollUpdateNotification>(
-        onNotification: (notification) {
-          if (notification.dragDetails != null && _buttonKey.currentState != null) {
-            if (notification.dragDetails.delta.dy < 0 && _buttonKey.currentState.isShow) {
-              _buttonKey.currentState.hide();
-            } else if (notification.dragDetails.delta.dy > 0 && !_buttonKey.currentState.isShow) {
-              _buttonKey.currentState.show();
-            }
-          }
-          return false;
-        },
-        child: EasyRefresh.custom(
-          controller: _controller,
-          slivers: [
-            _isLandscape
-                ? SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                return VideoItem(video: _videoList[index], type: 1,);
-              },
-                  childCount: _videoList.length
-              ),
-            )
-                : SliverPadding(
-              padding: EdgeInsets.all(8),
-              sliver: SliverGrid(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return VideoItem(video: _videoList[index], type: 0,);
-                },
-                  childCount: _videoList.length,
-                ),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 9 / 15
-                ),
-              ),
-            )
-          ],
-          emptyWidget: _videoList.length == 0 ? NoData(tip: '没有找到视频',) : null,
-          header: ClassicalHeader(
-            textColor: KkColors.primaryWhite,
-            infoColor: KkColors.primaryRed,
-            refreshText: '下拉刷新',
-            refreshReadyText: '释放刷新',
-            refreshingText: '正在刷新...',
-            refreshedText: '已获取最新数据',
-            infoText: '更新于%T'
+  Widget _buildVideoList(_TabViewData data) {
+    return EasyRefresh.custom(
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.all(8),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              return VideoItem(video: data.list[index], type: 0,);
+            },
+              childCount: data.list.length,
+            ),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 8,
+                childAspectRatio: 9 / 15
+            ),
           ),
-          footer: ClassicalFooter(
-            textColor: KkColors.primaryWhite,
-            infoColor: KkColors.primaryRed,
-            loadText: '上拉加载',
-            loadReadyText: '释放加载',
-            loadingText: '正在加载',
-            loadedText: '已加载结束',
-            noMoreText: '没有更多数据了~',
-            infoText: '更新于%T',
-          ),
-          onRefresh: () async {
-            _pageNum = 1;
-            await _getVideoList();
-          },
-          onLoad: () async {
-            _pageNum ++;
-            int len = await _getVideoList();
-            print(len);
-            if (len < 20) {
-              _controller.finishLoad(noMore: true);
-            }
-          },
         )
+      ],
+      emptyWidget: data.firstLoading ? Center(child: CircularProgressIndicator()) : (data.list.isEmpty ? NoData(tip: '没有找到视频',) : null),
+      header: ClassicalHeader(
+          textColor: KkColors.primaryWhite,
+          infoColor: KkColors.primaryRed,
+          refreshText: '下拉刷新',
+          refreshReadyText: '释放刷新',
+          refreshingText: '正在刷新...',
+          refreshedText: '已获取最新数据',
+          infoText: '更新于%T'
+      ),
+      footer: ClassicalFooter(
+        textColor: KkColors.primaryWhite,
+        infoColor: KkColors.primaryRed,
+        loadText: '上拉加载',
+        loadReadyText: '释放加载',
+        loadingText: '正在加载',
+        loadedText: '已加载结束',
+        noMoreText: '没有更多数据了~',
+        infoText: '更新于%T',
+      ),
+      onRefresh: () async {
+        data.pageNum = 1;
+        await _getVideoList(data);
+      },
+      onLoad: () async {
+        data.pageNum ++;
+        int len = await _getVideoList(data);
+        if (len < 20) {
+          data.controller.finishLoad(noMore: true);
+        }
+      },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -234,17 +172,32 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin, Auto
       height: double.infinity,
       child: _firstLoading
           ? Center(
-          child: CircularProgressIndicator(),
-        )
+        child: CircularProgressIndicator(),
+      )
           : Container(
         child: Column(
 //          mainAxisSize: MainAxisSize.max,
           children: [
             _buildCategoryNav(),
-            Expanded(child: _buildVideoList())
+            Expanded(child: TabBarView(
+              controller: _navController,
+              children: _tabViewData.map((e) => _buildVideoList(e)).toList(),
+            ))
           ],
         ),
       ),
     );
   }
+}
+
+
+
+class _TabViewData {
+  int pageNum = 0;
+  String typeId;
+  List<VideoModel> list;
+  EasyRefreshController controller;
+  bool firstLoading = true;
+
+  _TabViewData({this.pageNum, this.typeId, this.list, this.controller});
 }

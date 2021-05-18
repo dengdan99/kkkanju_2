@@ -1,4 +1,5 @@
 import 'package:bot_toast/bot_toast.dart';
+import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:kkkanju_2/models/record_model.dart';
@@ -127,7 +128,7 @@ class _PlayRecordPageState extends State<PlayRecordPage> {
   }
 
   void _playVideo(String api, String vid) {
-    Application.router.navigateTo(context, Routers.detailPage + '?api=${FluroConvertUtils.fluroCnParamsEncode(api)}&id=$vid');
+    Application.router.navigateTo(context, Routers.detailPage + '?api=${FluroConvertUtils.fluroCnParamsEncode(api)}&id=$vid', transition: TransitionType.cupertino);
   }
 
   void _deleteRecord(RecordModel model) async {
