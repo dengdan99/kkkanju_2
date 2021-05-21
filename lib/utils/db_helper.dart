@@ -345,6 +345,26 @@ class DBHelper {
     }
     return [];
   }
+  Future<DownloadModel> getNextOrPreviousVideoWithId(int id, bool isNext) async {
+    String whereStr = '$id < $_columnId';
+    String orderByStr = '$_columnId ASC';
+    if (isNext) {
+      whereStr = '$id > $_columnId';
+      orderByStr = '$_columnId DESC';
+    }
+    List<Map> maps = await _db.query(_downloadTableName,
+        columns: _allDownloadColumn,
+        where: whereStr,
+        orderBy: orderByStr,
+        limit: 1,
+    );
+    print('==========');
+    print(maps);
+    if (maps != null && maps.length > 0) {
+      return DownloadModel.fromJson(maps.first);
+    }
+    return null;
+  }
 
   /**
    * 记录表相关操作

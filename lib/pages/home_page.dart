@@ -2,6 +2,7 @@ import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/router/application.dart';
@@ -9,6 +10,7 @@ import 'package:kkkanju_2/router/routers.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/models/record_model.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
+import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/widgets/video_item.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,7 +18,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+class _HomePageState extends State<HomePage> {
   DBHelper _db = DBHelper();
   bool _firstLoading = true;
   EasyRefreshController _controller;
@@ -29,25 +31,34 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
   ];
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   void initState() {
     super.initState();
     _controller = EasyRefreshController();
     _initData();
   }
 
-  Future<void> _initData() async {
-    List record = await _db.getRecordList(pageNum: 0, pageSize: 20, played: true);
-    _levelList.asMap().forEach((index, _levelItem) {
-      HttpUtils.getLevelVideo(_levelItem.level).then((res) {
-        setState(() {
-          _levelList[index].videos = res;
-          _firstLoading = false;
+  Future<void> _initData({bool useCache = true}) async {
+    List<_LevelModel> res = SpHelper.getObjList<_LevelModel>(Constant.key_home_page_data_cache, _LevelModel.fromJson);
+    if (useCache && res != null && res.length > 0) {
+      setState(() {
+        _levelList = res;
+        _firstLoading = false;
+      });
+    } else {
+      SpHelper.remove(Constant.key_home_page_data_cache);
+      _levelList.asMap().forEach((index, _levelItem) {
+        HttpUtils.getLevelVideo(_levelItem.level).then((res) {
+          if (mounted) {
+            setState(() {
+              _levelList[index].videos = res;
+              _firstLoading = false;
+            });
+            SpHelper.putObjectList(Constant.key_home_page_data_cache, _levelList.map((e) => e.toJson()).toList());
+          }
         });
       });
-    });
+    }
+    List record = await _db.getRecordList(pageNum: 0, pageSize: 20, played: true);
     setState(() {
       _recordList = record;
     });
@@ -131,7 +142,6 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
     } else {
       recordStr += '  ' + (model.progress * 100).toStringAsFixed(2) + '%';
     }
-
     return Column(
       children: <Widget>[
         Expanded(
@@ -226,7 +236,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+//    super.build(context);
     List<Widget> mainColum = [];
     if (_recordList.length > 0) mainColum.add(_bulidMyRecord());
     _levelList.forEach((item) {
@@ -256,7 +266,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
           infoText: '更新于%T'
       ),
       onRefresh: () async {
-        await _initData();
+        await _initData(useCache: false);
       },
     );
   }
@@ -270,4 +280,26 @@ class _LevelModel {
   List<VideoModel> videos;
 
   _LevelModel({this.title, this.level, this.videos});
+
+  static _LevelModel fromJson(Map<dynamic, dynamic> json) {
+    var title = json['title'];
+    var level = json['level'];
+    var videos = <VideoModel>[];
+    if (json['videos'] != null) {
+      json['videos'].forEach((e) {
+        videos.add(VideoModel.fromJson(e));
+      });
+    }
+    return _LevelModel(title: title, level: level, videos: videos);
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['title'] = this.title;
+    data['level'] = this.level;
+    if (this.videos != null) {
+      data['videos'] = this.videos.map((v) => v.toJson()).toList();
+    }
+    return data;
+  }
 }

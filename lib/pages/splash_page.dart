@@ -38,6 +38,7 @@ class _SplashPageState extends State<SplashPage> {
   }
   
   void _initAsync() async {
+    SpHelper.remove(Constant.key_home_page_data_cache);
     await SpHelper.getInstance();
     String colorKey = SpHelper.getString(Constant.key_theme_color, defValue: Constant.default_theme_color);
     // 初始化主题颜色

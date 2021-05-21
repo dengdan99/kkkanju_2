@@ -64,7 +64,7 @@ class _SortPageState extends State<SortPage> with TickerProviderStateMixin, Auto
     List<CategoryModel> list = await HttpUtils.getCategoryList();
     list.retainWhere((element) => (element.pid != '1' && element.id != '1'));
     setState(() {
-      _categoryList = [CategoryModel(id: '1', name: '最近')] + list;
+      _categoryList = list;
       _navController = TabController(length: _categoryList.length, vsync: this);
       _tabViewData = List.generate(_categoryList.length, (index) => _TabViewData(pageNum: 1, typeId: _categoryList[index].id, list: [], controller: EasyRefreshController()));
     });

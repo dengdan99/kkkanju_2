@@ -4,6 +4,7 @@ import 'package:kkkanju_2/utils/ColorsUtil.dart';
 
 class KkColors {
   static Color black = ColorsUtil.hexColor(0x12121a);
+  static Color descBlack = Colors.black54;
   static Color mainBlackBg = ColorsUtil.hexColor(0x15172e);
   static Color greyInBalck = Colors.white60;
   static Color placeholder = ColorsUtil.hexColor(0x808082);

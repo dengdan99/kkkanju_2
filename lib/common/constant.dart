@@ -11,6 +11,7 @@ class Constant {
   static const String key_wifi_auto_download = 'key_wifi_auto_download';
   static const String key_m3u8_to_mp4 = 'key_m3u8_to_mp4';
   static const String key_db_name = 'player.db';
+  static const String key_home_page_data_cache = 'home_page_data_cache';
 }
 
 Map<String, Color> themeColorMap = {

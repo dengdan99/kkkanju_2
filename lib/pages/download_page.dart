@@ -200,9 +200,9 @@ class _DownloadPageState extends State<DownloadPage> with SingleTickerProviderSt
               icon: Icon(Icons.play_circle_outline),
               iconSize: 32,
               color: Color(0xff3d3d3d),
-              onPressed: ()  => _playVideo(model.savePath, model.name),
+              onPressed: ()  => _playVideo(model.savePath, model.name, model.id),
             ),
-            onTap: () => _isEdit ? _toggleChecked(index) : _playVideo(model.savePath, model.name),
+            onTap: () => _isEdit ? _toggleChecked(index) : _playVideo(model.savePath, model.name, model.id),
           );
         },
         separatorBuilder: (_, index) {
@@ -297,8 +297,8 @@ class _DownloadPageState extends State<DownloadPage> with SingleTickerProviderSt
   }
 
   /// 播放视频
-  void _playVideo(String url, String name) {
-    Application.router.navigateTo(context, Routers.localVideoPage + '?url=${FluroConvertUtils.fluroCnParamsEncode(url)}&name=${FluroConvertUtils.fluroCnParamsEncode(name)}', transition: TransitionType.nativeModal);
+  void _playVideo(String url, String name, int id) {
+    Application.router.navigateTo(context, Routers.localVideoPage + '?id=${id.toString()}&url=${FluroConvertUtils.fluroCnParamsEncode(url)}&name=${FluroConvertUtils.fluroCnParamsEncode(name)}', transition: TransitionType.nativeModal);
   }
 
   /// 切换单个选择

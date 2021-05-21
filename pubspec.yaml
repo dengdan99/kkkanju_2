@@ -30,7 +30,7 @@ dependencies:
   cupertino_icons: ^1.0.0
   # 路由
   fluro: ^1.7.8
-  provider: ^4.3.3
+  provider: ^5.0.0
   path_provider: ^1.6.27
   # http请求
   dio: ^3.0.10
@@ -42,7 +42,7 @@ dependencies:
   url_launcher: ^5.7.10
   video_player: ^2.1.1
   flutter_spinkit: ^3.1.0
-  chewie: ^1.0.0
+#  chewie: ^1.0.0
   screen: ^0.0.5
   path: ^1.5.1
   permission_handler: ^5.1.0+2
@@ -53,6 +53,7 @@ dependencies:
   get_ip: 0.4.0
   xml: ^4.5.1
   bot_toast: ^3.0.5
+  flick_video_player: 0.3.1
   m3u8_downloader:
     git:
       url: https://github.com/dengdan99/m3u8_downloader.git

@@ -51,7 +51,8 @@ Handler localVideoHandle = Handler(
   handlerFunc: (BuildContext context, Map<String, List<String>> params) {
     String url = params['url']?.first;
     String name = params['name']?.first;
-    return LocalVideoPage(url: FluroConvertUtils.fluroCnParamsDecode(url), name: FluroConvertUtils.fluroCnParamsDecode(name),);
+    String id = params['id']?.first;
+    return LocalVideoPage(url: FluroConvertUtils.fluroCnParamsDecode(url), name: FluroConvertUtils.fluroCnParamsDecode(name),id: id);
   }
 );
 

@@ -2,6 +2,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:fluro/fluro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/record_model.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
@@ -77,8 +78,8 @@ class _PlayRecordPageState extends State<PlayRecordPage> {
                       height: 75,
                     ),
                   ),
-                  title: Text(model.name, style: TextStyle(color: Colors.black, fontSize: 14), overflow: TextOverflow.ellipsis, maxLines: 2,),
-                  subtitle: Text(recordStr, style: TextStyle(fontSize: 12)),
+                  title: Text(model.name, style: TextStyle(color: KkColors.black, fontSize: 14), overflow: TextOverflow.ellipsis, maxLines: 2,),
+                  subtitle: Text(recordStr, style: TextStyle(color: KkColors.descBlack, fontSize: 12)),
                   isThreeLine: false,
                   trailing: SizedBox(
                     width: 36,

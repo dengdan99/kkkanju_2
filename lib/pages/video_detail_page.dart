@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:ui';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:chewie/chewie.dart';
+import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kkkanju_2/common/constant.dart';
@@ -17,10 +15,12 @@ import 'package:kkkanju_2/models/suggest_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/provider/download_task.dart';
 import 'package:kkkanju_2/provider/mirror_link.dart';
+import 'package:kkkanju_2/provider/player_data_manager.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
-import 'package:kkkanju_2/widgets/video_controls.dart';
+import 'package:kkkanju_2/widgets/player/custom_embed_controls.dart';
+import 'package:kkkanju_2/widgets/player/custom_orientation_controls.dart';
 import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 
@@ -36,16 +36,15 @@ class VideoDetailPage extends StatefulWidget {
   _VideoDetailPageState createState () => _VideoDetailPageState();
 }
 
-class _VideoDetailPageState extends State<VideoDetailPage> {
+class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProviderStateMixin {
   Future<VideoModel> _futureFetch;
-  VideoPlayerController _controller;
-  ChewieController _chewieController;
+  FlickManager _flickManager;
   DBHelper _db = DBHelper();
 
-  String _url;
   SourceModel _currentSource;
   VideoModel _videoModel;
   RecordModel _recordModel;
+  VideoSource currentVideoSource;
   double _aspectRatio = 16 / 9;
   bool _isSingleVideo = false; // 是否单视频,没有选集
   int _cachePlayedSecond = -1; // 临时的播放秒数
@@ -53,10 +52,15 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   bool _bannerAdLoading = true; // 广告显示
   BannerAd myBannerAd;
   bool isReported = false; // 是否报错过
+  List<String> urls = [];
+  Duration _startPlayPosition; // 调转到 起始播放起始
+  PlayerDataManager _playerDataManager;
+  TabController _sourceTabController;
 
   @override
   void initState() {
     super.initState();
+    _playerDataManager = context.read<PlayerDataManager>();
 //    _initAd();
     _futureFetch = _getVideoInfo();
   }
@@ -112,6 +116,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           _sourceIndex = 0;
         }
         VideoSource videoSource = video.sources[_sourceIndex];
+        currentVideoSource = videoSource;
         if (_recordModel == null) {
           url = videoSource.anthologies.first.url;
           name = videoSource.anthologies.first.name == null ? video.name : (video.name + '  ' + videoSource.anthologies.first.name);
@@ -126,6 +131,14 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           }
           position = recordModel.playedTime;
         }
+        _sourceTabController = TabController(length: video.sources.length, initialIndex: _sourceIndex, vsync: this);
+        _sourceTabController.addListener(() {
+          if (_sourceTabController.index.toDouble() == _sourceTabController.animation.value) {
+            this.setState(() {
+              _sourceIndex = _sourceTabController.index;
+            });
+          }
+        });
         _startPlay(url, name, playPosition: position);
       }
     }
@@ -135,90 +148,25 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   void _startPlay(String url, String name, { int playPosition, bool isFullScreen = false }) async {
     // 切换视频，重置_cachePlayedSecond
     _cachePlayedSecond = -1;
-
-    setState(() {
-      _url = url;
-    });
-    if (_controller == null) {
-      _initController(url, name, playPosition: playPosition, isFullScreen: isFullScreen);
-      return;
-    }
-    final oldController = _controller;
-    // 在下一帧处理完后
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      oldController.removeListener(_videoListener);
-      // 注销旧的controller
-      await oldController.dispose();
-      _chewieController?.dispose();
-      _initController(url, name, playPosition: playPosition, isFullScreen: isFullScreen);
-    });
-    setState(() {
-      _controller = null;
-    });
+    _initController(url, name, playPosition: playPosition, isFullScreen: isFullScreen);
+    return;
   }
 
   void _initController(String url, String name, { int playPosition, bool isFullScreen = false }) async {
-//        url = "http://static.chinameifei.com/group2/M00/2E/C3/dyqVIl_kIm6ABKpkAABSNGvBuCk29.m3u8";
-//        url = "http://iqiyi.cdn22-okzyw.net/20210317/10325_133d4c2a/1200k/hls/index.m3u8";
-    //    url = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
-//    url = "https://cloud189-shzh-corp.oos-gdsz.ctyunapi.cn/0ff847e1-d808-4f2f-8023-c4fe4cc945da?response-content-disposition=attachment%3Bfilename%3D%22%C3%A5%C2%AE%C2%9E%C3%A4%C2%B9%C2%A0%C3%A5%C2%8C%C2%BB%C3%A7%C2%94%C2%9F%C3%A6%C2%A0%C2%BC%C3%A8%C2%95%C2%BES17E01.mp4%22&x-amz-CLIENTNETWORK=UNKNOWN&x-amz-CLOUDTYPEIN=CORP&x-amz-CLIENTTYPEIN=UNKNOWN&Signature=NQvsxurLQFyCA5WUwsVxrdG%2BNE4%3D&AWSAccessKeyId=4549320003c8aac9538f&Expires=1617851793&x-amz-limitrate=102400&response-content-type=video/mp4&x-amz-FSIZE=639772394&x-amz-UID=172982920492925&x-amz-UFID=81397312056489820";
     print("播放地址：" + url);
     print("name: " + name);
-    // 设置资源
-    _controller = VideoPlayerController.network(url, videoPlayerOptions: VideoPlayerOptions(
-        mixWithOthers: true
-    ));
-    try {
-      // 为了自适应视频比例
-      await _controller.initialize();
-      setState(() {
-//        _aspectRatio = _controller.value.aspectRatio;
-      });
-    } catch(err) {
-      print(err);
-//      return;
-    }
-
-    Duration position;
-    if (playPosition != null) {
-      position = Duration(milliseconds: playPosition);
-    }
-
-    _chewieController = ChewieController(
-      videoPlayerController: _controller,
+    // 初始化播放器
+    _flickManager = FlickManager(
+      videoPlayerController: VideoPlayerController.network(url),
+      autoInitialize: true,
       autoPlay: true,
-      startAt: position,
-      allowedScreenSleep: false,
-      allowFullScreen: true,
-      aspectRatio: _controller?.value?.aspectRatio,
-      fullScreenByDefault: isFullScreen,
-      playbackSpeeds: [0.5, 1, 1.5, 2, 2.5, 3, 4],
-      errorBuilder: _buildPlayerError,
-//      systemOverlaysAfterFullScreen: [
-//        SystemUiOverlay.top,
-//        SystemUiOverlay.bottom
-//      ],
-//      systemOverlaysOnEnterFullScreen: [],
-//      deviceOrientationsOnEnterFullScreen: [
-//        DeviceOrientation.landscapeLeft,
-//        DeviceOrientation.landscapeRight,
-//      ],
-      deviceOrientationsAfterFullScreen: [
-        DeviceOrientation.portraitUp
-      ],
-      customControls: VideoControls(
-        title: name,
-        playNextVideo: playNextVideoHandler,
-        actions: Row(
-          children: [
-            _buildMirror(url, name),
-            _buildDownload(url, name),
-          ],
-        ),
-      )
     );
-
-    _controller.addListener(_videoListener);
+    if (playPosition != null) {
+      _startPlayPosition = Duration(milliseconds: playPosition);
+    }
+    _flickManager.flickVideoManager.addListener(_videoListener);
+    _playerDataManager.init(_flickManager, _videoModel, _sourceIndex, listener: _videoListener, initUrl: url);
+    _playerDataManager.setCurrentPlayingByUrl(url);
     setState(() {});
   }
 
@@ -227,16 +175,19 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     if (myBannerAd != null) {
       myBannerAd.dispose();
     }
-    _controller?.removeListener(_videoListener);
-    _controller?.dispose();
-    _chewieController?.dispose();
+    _flickManager?.dispose();
     _db.close();
 
     super.dispose();
   }
 
   void _videoListener() async {
-    if (_videoModel == null || _controller == null || !_controller.value.isPlaying) return;
+    if (_flickManager == null || _videoModel == null || _flickManager.flickVideoManager == null || !_flickManager.flickVideoManager.isVideoInitialized) return;
+    if (_flickManager.flickVideoManager.isVideoInitialized && _startPlayPosition != null) {
+      _flickManager.flickControlManager.seekTo(_startPlayPosition);
+      _startPlayPosition = null;
+    }
+    VideoPlayerController _controller = _flickManager.flickVideoManager.videoPlayerController;
     // 视频播放同一秒内不执行操作
     if (_controller.value.position.inSeconds == _cachePlayedSecond) return;
     _cachePlayedSecond = _controller.value.position.inSeconds;
@@ -245,7 +196,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     if (!_isSingleVideo) {
       VideoSource vs = _videoModel.sources[_sourceIndex];
       List<Anthology> anthologies = vs.anthologies;
-      Anthology anthology = anthologies.firstWhere((e) => e.url == _url, orElse: () => null);
+      Anthology anthology = _playerDataManager?.currentAnthology;
       if (anthology != null) {
         anthologyName = anthology.name;
       }
@@ -277,34 +228,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     }
 
     if (!_isSingleVideo && _cachePlayedSecond >= _controller.value.duration.inSeconds) {
-      playNextVideoHandler();
-    }
-  }
-
-  /// 播放下一首
-  void playNextVideoHandler() async {
-    // print('播放下一首');
-    VideoSource vs = _videoModel.sources[_sourceIndex];
-    List<Anthology> anthologies = vs.anthologies;
-
-    if (anthologies != null && anthologies.length > 1) {
-      // 播放到最后，切换下一个视频
-      int index = anthologies.indexWhere((e) => e.url == _url);
-      if (index > -1 && index != (anthologies.length - 1)) {
-        Anthology next = anthologies[index + 1];
-        // 切换视频，重置_cachePlayedSecond
-        _cachePlayedSecond = -1;
-        setState(() {
-          _url = next.url;
-        });
-        var isFullScreen = _chewieController.isFullScreen;
-        if (isFullScreen) {
-          _chewieController.exitFullScreen();
-        }
-        BotToast.showText(text: '正在切换，请稍后', duration: Duration(seconds: 7));
-        await Future.delayed(Duration(seconds: 5));
-        _startPlay(next.url, _videoModel.name + '  ' + next.name, playPosition: 0, isFullScreen: isFullScreen);
-      }
+//      playNextVideoHandler();
     }
   }
 
@@ -316,17 +240,17 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
       isReported = true;
     });
     VideoSource vs = _videoModel.sources[_sourceIndex];
-    int index = vs.anthologies.indexWhere((e) => e.url == _url);
+    var ant = _playerDataManager.currentAnthology;
 
     SuggestModel suggestModel = SuggestModel(
       type: 2,
-      name: '无法播放: ' + video.name + '-' + vs.anthologies[index].name,
+      name: '无法播放: ' + video.name + '-' + ant.name,
       videoId: video.id,
       videoName: video.name,
       sourceName: vs.name,
-      anthologyName: vs.anthologies[index].name,
+      anthologyName: ant.name,
       platform: 'android',
-      currentPlayUrl: _url,
+      currentPlayUrl: ant.url,
       desc: '用户反馈，无法播放',
       awardedMarks: 0,
     );
@@ -336,8 +260,8 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     }
   }
 
-  Widget _buildPlayerError(BuildContext context, String errorMessage) {
-    print('视频播放错误：'  + errorMessage);
+  Widget _buildPlayerError(BuildContext context) {
+//    print('视频播放错误：'  + errorMessage);
     return Stack(
       children: [
         Align(
@@ -561,27 +485,27 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     if (_videoModel == null) {
       return Container();
     }
-    return DefaultTabController(
-      length: _videoModel.sources.length,
-      initialIndex: _sourceIndex,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.only(bottom: 10),
-            child: TabBar(
-              isScrollable: true,
-              onTap: (index) {
-                setState(() {
-                  _sourceIndex = index;
-                });
-              },
-              tabs: _videoModel.sources.map((e) => Tab(text: e.name,)).toList(),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.only(bottom: 10),
+          child: TabBar(
+            controller: _sourceTabController,
+            isScrollable: true,
+            onTap: (index) {
+              setState(() {
+                _sourceIndex = index;
+              });
+            },
+            tabs: _videoModel.sources.map((e) => Tab(text: e.name,)).toList(),
           ),
-          Container(
-            height: 200,
-            child: TabBarView(
+        ),
+        Container(
+          height: 200,
+          child: Consumer<PlayerDataManager>(builder: (ctx, _playerDataManager, child) {
+            return TabBarView(
+              controller: _sourceTabController,
               children: _videoModel.sources.map((e) {
                 return Container(
                   child: GridView.builder(
@@ -600,14 +524,15 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
                   )
                 );
               }).toList()
-            ),
-          ),
-        ],
-      ),
+            );
+          }),
+        ),
+      ],
     );
   }
 
   Widget _buildAnthologyButton (Anthology anthology) {
+    var _url = _playerDataManager.currentAnthology.url;
     return SizedBox(
       height: 36,
       child: ElevatedButton(
@@ -623,7 +548,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
         ),),
         onPressed: () async {
           if (_url == anthology.url) return;
-          _startPlay(anthology.url, _videoModel.name + '  ' + anthology.name);
+          if (_playerDataManager.sourceIndex != _sourceIndex) {
+            _playerDataManager.setSourceIndex(_sourceIndex);
+          }
+          _playerDataManager.skipToVideoByUrl(anthology.url);
         },
       ),
     );
@@ -652,13 +580,15 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
     );
   }
 
-  GestureDetector _buildMirror(String url, String name) {
+  GestureDetector _buildMirror() {
     return GestureDetector(
       onTap: () {
         showDialog(
           context: context,
           builder: (content) {
-            return MirrorDialog(url: url, videoName: name, playerControls: _controller);
+            var name = _videoModel.name + '  ' + _playerDataManager.currentAnthology.name;
+            var url = _playerDataManager.currentAnthology.url;
+            return MirrorDialog(url: url, videoName: name, playerControls: _flickManager.flickVideoManager.videoPlayerController);
           },
         );
       },
@@ -679,9 +609,11 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
   }
 
 
-  GestureDetector _buildDownload(String url, String name) {
+  GestureDetector _buildDownload() {
     return GestureDetector(
       onTap: () async {
+        var name = _videoModel.name + '  ' + _playerDataManager.currentAnthology.name;
+        var url = _playerDataManager.currentAnthology.url;
         await context.read<DownloadTaskProvider>().createDownload(
           context: context,
           video: _videoModel,
@@ -757,20 +689,51 @@ class _VideoDetailPageState extends State<VideoDetailPage> {
           ),
         );
       }
-      if (_chewieController != null && _controller != null) {
-        return Chewie(controller: _chewieController);
-      }
-      return Stack(
-        children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: BackButton(color: Colors.white,),
+      if (_flickManager != null && _playerDataManager.currentAnthology != null) {
+        return FlickVideoPlayer(
+          flickManager: _flickManager,
+//          preferredDeviceOrientationFullscreen: [
+//            DeviceOrientation.portraitUp,
+//            DeviceOrientation.landscapeLeft,
+//            DeviceOrientation.landscapeRight,
+//          ],
+          flickVideoWithControls: FlickVideoWithControls(
+            playerErrorFallback: _buildPlayerError(context),
+            controls: CustomEmbedControls(
+              topRightWidget: Row(
+                children: [
+                  _buildMirror(),
+                  _buildDownload(),
+                ],
+              ),
+            ),
+            videoFit: BoxFit.fitHeight,
           ),
-          Center(
-            child: CircularProgressIndicator(),
-          )
-        ],
-      );
+          flickVideoWithControlsFullscreen: FlickVideoWithControls(
+            playerErrorFallback: _buildPlayerError(context),
+            controls: CustomOrientationControls(
+              topRightWidget: Row(
+                children: [
+                  _buildDownload(),
+                ],
+              ),
+            ),
+            videoFit: BoxFit.fitHeight,
+          ),
+        );
+      } else {
+        return Stack(
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: BackButton(color: Colors.white,),
+            ),
+            Center(
+              child: CircularProgressIndicator(),
+            )
+          ],
+        );
+      }
     });
   }
 
