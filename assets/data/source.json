@@ -4,5 +4,7 @@
   "httpApi": "http://www.kk2021.me/api.php",
   "httpsApi": "https://www.kk2021.me/api.php",
   "type": "美剧",
-  "version": 6
+  "version": 6,
+  "key": "45643332098789413367867851920329",
+  "iv": "8105547186756005"
 }

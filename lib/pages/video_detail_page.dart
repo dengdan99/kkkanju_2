@@ -12,12 +12,15 @@ import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/record_model.dart';
 import 'package:kkkanju_2/models/source_model.dart';
 import 'package:kkkanju_2/models/suggest_model.dart';
+import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/provider/download_task.dart';
 import 'package:kkkanju_2/provider/mirror_link.dart';
 import 'package:kkkanju_2/provider/player_data_manager.dart';
+import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
+import 'package:kkkanju_2/utils/rrm_utils.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/widgets/player/custom_embed_controls.dart';
 import 'package:kkkanju_2/widgets/player/custom_orientation_controls.dart';
@@ -90,6 +93,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
   Future<VideoModel> _getVideoInfo() async {
     String baseUrl = widget.api;
     Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
+    VersionModel versionModel = await context.read<SourceProvider>().getVersion();
     _currentSource = SourceModel.fromJson(sourceJson);
     if (baseUrl == null) {
       baseUrl = _currentSource.httpsApi + HttpUtils.videoPath;
@@ -139,20 +143,20 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
             });
           }
         });
-        _startPlay(url, name, playPosition: position);
+
+        if (RrmUtils.isRrmVideo(currentVideoSource)) {
+          url = await RrmUtils.getM3u8Url(_currentSource, versionModel, url);
+        }
+
+        _startPlay(url, name, playPosition: position, version: versionModel, source: _currentSource);
       }
     }
     return video;
   }
 
-  void _startPlay(String url, String name, { int playPosition, bool isFullScreen = false }) async {
+  void _startPlay(String url, String name, { int playPosition, VersionModel version, SourceModel source }) async {
     // 切换视频，重置_cachePlayedSecond
     _cachePlayedSecond = -1;
-    _initController(url, name, playPosition: playPosition, isFullScreen: isFullScreen);
-    return;
-  }
-
-  void _initController(String url, String name, { int playPosition, bool isFullScreen = false }) async {
     print("播放地址：" + url);
     print("name: " + name);
     // 初始化播放器
@@ -165,7 +169,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
       _startPlayPosition = Duration(milliseconds: playPosition);
     }
     _flickManager.flickVideoManager.addListener(_videoListener);
-    _playerDataManager.init(_flickManager, _videoModel, _sourceIndex, listener: _videoListener, initUrl: url);
+    _playerDataManager.init(_flickManager, _videoModel, _sourceIndex, version, source, listener: _videoListener, initUrl: url);
     _playerDataManager.setCurrentPlayingByUrl(url);
     setState(() {});
   }
@@ -258,6 +262,12 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
     if (res) {
       BotToast.showText(text: '感谢您的报告');
     }
+  }
+
+  Widget _buildLoadingFallback() {
+    return Center(
+      child: CircularProgressIndicator(),
+    );
   }
 
   Widget _buildPlayerError(BuildContext context) {
@@ -498,7 +508,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
                 _sourceIndex = index;
               });
             },
-            tabs: _videoModel.sources.map((e) => Tab(text: e.name,)).toList(),
+            tabs: _videoModel.sources.map((e) => Tab(text: e.name + '资源',)).toList(),
           ),
         ),
         Container(
@@ -551,7 +561,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
           if (_playerDataManager.sourceIndex != _sourceIndex) {
             _playerDataManager.setSourceIndex(_sourceIndex);
           }
-          _playerDataManager.skipToVideoByUrl(anthology.url);
+          await _playerDataManager.skipToVideoByUrl(anthology.url);
         },
       ),
     );
@@ -612,6 +622,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
   GestureDetector _buildDownload() {
     return GestureDetector(
       onTap: () async {
+        if (RrmUtils.isRrmVideo(_playerDataManager.videoSource)) {
+          BotToast.showText(text: '该资源不能下载');
+          return;
+        }
         var name = _videoModel.name + '  ' + _playerDataManager.currentAnthology.name;
         var url = _playerDataManager.currentAnthology.url;
         await context.read<DownloadTaskProvider>().createDownload(
@@ -679,7 +693,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
               ),
               Padding(
                 padding: EdgeInsets.only(top: 10),
-                child: Text(mirrorLinkProvider.selected.name + ' 投屏中', style: TextStyle(color: KkColors.primaryWhite),),
+                child: Text(mirrorLinkProvider.currentDevice.name + ' 投屏中', style: TextStyle(color: KkColors.primaryWhite),),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 10),

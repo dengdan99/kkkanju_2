@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     _LevelModel(title: '电影推荐', level: 8, videos: []),
     _LevelModel(title: '美剧推荐', level: 5, videos: []),
     _LevelModel(title: '韩剧推荐', level: 6, videos: []),
-    _LevelModel(title: 'KK推荐', level: 7, videos: []),
+    _LevelModel(title: '蓝光超清', level: 7, videos: []),
   ];
 
   @override

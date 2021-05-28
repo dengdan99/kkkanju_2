@@ -34,6 +34,7 @@ class HttpUtils {
 
   static void errorHandler(err) {
     DioError dioError;
+    BotToast.closeAllLoading();
     if (err is DioError) {
       dioError = err;
       print('接口错误: ' + dioError.request.baseUrl + dioError.request.path + dioError.request.queryParameters.toString());
@@ -188,6 +189,26 @@ class HttpUtils {
       errorHandler(e);
     }
     return result;
+  }
+
+  static Future<String> getRrmUrl(String key, String type, String orginUrl) async {
+    String url = '';
+    try {
+      Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
+      SourceModel currentSource = SourceModel.fromJson(sourceJson);
+      Response response = await dio.get(currentSource.httpsApi + '/index/rrm?key=$key&type=$type&url=$orginUrl');
+      Map json = jsonDecode(response.data.toString());
+      if (json['code'] == 1) {
+        url = json['data']['url'];
+      } else {
+        print(json['msg']);
+        BotToast.showText(text: '视频解析错误，请重启app');
+      }
+    } catch (e, s) {
+      BotToast.showText(text: '网络错误，请重试一下');
+      print(e.toString());
+    }
+    return url;
   }
 
   static Future<String> getSoupSoulText() async {

@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flick_video_player/flick_video_player.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/provider/player_data_manager.dart';
 import 'package:provider/provider.dart';
@@ -37,6 +38,7 @@ class CustomOrientationControls extends StatelessWidget {
       onLongPressStart: (details) {
         if (flickVideoManager.videoPlayerController.value.isPlaying) {
           final speed = _playerDataManager.setSpeedByIndex(4);
+          HapticFeedback.mediumImpact();
           BotToast.showText(text: speed.toString() + ' 倍速度播放 >>', duration: null);
         }
       },
@@ -46,6 +48,19 @@ class CustomOrientationControls extends StatelessWidget {
       },
       child: Stack(
         children: <Widget>[
+          Positioned.fill(
+            child: _playerDataManager.isChanging
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  Text('视频切换中')
+                ],
+              ),
+            )
+                : Container(),
+          ),
           Positioned.fill(
             child: FlickAutoHideChild(
               child: Container(color: Colors.black38),
@@ -80,8 +95,9 @@ class CustomOrientationControls extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: GestureDetector(
-                            onTap: () {
-                              _playerDataManager.skipToPreviousVideo();
+                            onTap: () async {
+                              BotToast.showText(text: '视频切换中， 请稍等');
+                              await _playerDataManager.skipToPreviousVideo();
                             },
                             child: Icon(
                               Icons.skip_previous,
@@ -99,8 +115,9 @@ class CustomOrientationControls extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: GestureDetector(
-                            onTap: () {
-                              _playerDataManager.skipToNextVideo();
+                            onTap: () async {
+                              BotToast.showText(text: '视频切换中， 请稍等');
+                              await _playerDataManager.skipToNextVideo();
                             },
                             child: Icon(
                               Icons.skip_next,

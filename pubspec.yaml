@@ -42,24 +42,24 @@ dependencies:
   url_launcher: ^5.7.10
   video_player: ^2.1.1
   flutter_spinkit: ^3.1.0
-#  chewie: ^1.0.0
   screen: ^0.0.5
   path: ^1.5.1
   permission_handler: ^5.1.0+2
   flutter_widget_from_html_core: ^0.5.1+4
-  connectivity: ^2.0.2
+#  connectivity: ^2.0.2
   auto_orientation: ^1.0.6
   flutter_easyrefresh: ^2.1.8
   get_ip: 0.4.0
   xml: ^4.5.1
   bot_toast: ^3.0.5
   flick_video_player: 0.3.1
+  encrypt: ^4.1.0
+  flutter_dlna:
+    git:
+      url: https://github.com/dengdan99/flutter_dlna.git
   m3u8_downloader:
     git:
       url: https://github.com/dengdan99/m3u8_downloader.git
-  lblelinkplugin:
-    git:
-      url: https://github.com/dengdan99/lblelinkplugin.git
 
 dev_dependencies:
   flutter_test:

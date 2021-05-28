@@ -79,7 +79,7 @@ class _SplashPageState extends State<SplashPage> {
           Image.asset(
             'assets/image/splash-bg.jpg',
             width: double.infinity,
-            fit: BoxFit.fitWidth,
+            fit: BoxFit.cover,
             height: double.infinity,
           ),
           Positioned(

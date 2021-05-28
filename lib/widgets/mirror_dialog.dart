@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lblelinkplugin/tv_list.dart';
+import 'package:kkkanju_2/provider/player_data_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import '../common/kk_colors.dart';
@@ -8,7 +8,7 @@ import '../provider/mirror_link.dart';
 
 class MirrorDialog extends StatefulWidget {
   final String url;
-  VideoPlayerController playerControls;
+  final VideoPlayerController playerControls;
   final String videoName;
 
   MirrorDialog({@required this.url, @required this.playerControls, this.videoName});
@@ -21,23 +21,29 @@ class _MirrorDialogState extends State<MirrorDialog> {
   bool _loading = false;
   bool _searching = false;
   MirrorLinkProvider _mirrorLinkProvider;
+  PlayerDataManager _playerDataManager;
 
   @override
   void initState() {
     super.initState();
+    _playerDataManager = context.read<PlayerDataManager>();
     _searchTv();
   }
 
   @override
   void dispose() {
-    _mirrorLinkProvider.removeListener(_mirrorListener);
     super.dispose();
+    if (!_mirrorLinkProvider.running) {
+      _playerDataManager.play();
+    }
+    _mirrorLinkProvider.removeListener(_mirrorListener);
   }
 
-  void _connectTv (TvData tv) async {
+  void _connectTv (DlnaDevice device) async {
+    await _playerDataManager.pause();
+    String url = await _playerDataManager.playUrlHandler(widget.url);
+    await _mirrorLinkProvider.connect(url, widget.videoName, device);
     Navigator.of(context).pop();
-    widget.playerControls.pause();
-    await context.read<MirrorLinkProvider>().connect(widget.url, widget.videoName, tv);
     setState(() {});
   }
 
@@ -46,6 +52,7 @@ class _MirrorDialogState extends State<MirrorDialog> {
     setState(() {
       _loading = true;
     });
+    await _playerDataManager.pause();
     _mirrorLinkProvider = context.read<MirrorLinkProvider>();
     await _mirrorLinkProvider.init();
     _mirrorLinkProvider.addListener(_mirrorListener);
@@ -62,10 +69,10 @@ class _MirrorDialogState extends State<MirrorDialog> {
 
   Widget _buildTvList (BuildContext context) {
     return Consumer<MirrorLinkProvider>(builder: (ctx, mirrorLinkProvider, child) {
-      TvData selected = mirrorLinkProvider.selected;
-      List<TvData> _tvData = mirrorLinkProvider.tvData;
+      DlnaDevice selected = mirrorLinkProvider.currentDevice;
+      List<DlnaDevice> _devicesData = mirrorLinkProvider.devices;
       return Container(
-        child: _tvData.length == 0
+        child: _devicesData.length == 0
             ? Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -91,18 +98,18 @@ class _MirrorDialogState extends State<MirrorDialog> {
             : ListView.builder(
             shrinkWrap: true,
             physics: const ScrollPhysics(),
-            itemCount: _tvData.length,
+            itemCount: _devicesData.length,
             itemBuilder: (context, index) {
               bool slet = false;
               if (selected != null) {
-                slet = selected.uId == _tvData[index].uId;
+                slet = selected.id == _devicesData[index].id;
               }
               return ListTile(
 //             dense: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 0.0),
                 leading: Icon(Icons.tv, color: slet ? KkColors.primaryRed : KkColors.descWhite,),
-                onTap: () => _connectTv(_tvData[index]),
-                title: Text(_tvData[index].name, style: TextStyle(color: slet ? KkColors.primaryRed : KkColors.descWhite,),),
+                onTap: () => _connectTv(_devicesData[index]),
+                title: Text(_devicesData[index].name, style: TextStyle(color: slet ? KkColors.primaryRed : KkColors.descWhite,),),
                 trailing: slet
                     ? Icon(Icons.check, color: KkColors.primaryRed,)
                     : Text('选择',  style: TextStyle(color: KkColors.descWhite),),

@@ -25,12 +25,21 @@ class SourceProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<VersionModel> getVersion() async {
+    Map json = SpHelper.getObject(Constant.key_version_result);
+    if (json != null) {
+      return VersionModel.fromJson(json);
+    }
+    return await HttpUtils.getLastVersion();
+  }
+
   /// 检查版本
   Future<bool> checkVersion(BuildContext ctx) async {
     int _localVersion = _currentSource.version;
     bool onclickOk;
 //    print('=====================: ' + _localVersion.toString());
     VersionModel version = await HttpUtils.getLastVersion();
+    SpHelper.putObject(Constant.key_version_result, version);
 //    print(version.toString());
     if (version == null) return true;
     if (version.enable && version.version > _localVersion) {

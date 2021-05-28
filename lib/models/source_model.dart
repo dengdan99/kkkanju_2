@@ -7,6 +7,8 @@ class SourceModel {
   String httpApi;
   String httpsApi;
   String type;
+  String key;
+  String iv;
   int version;
 
   SourceModel(
@@ -26,6 +28,8 @@ class SourceModel {
     httpsApi = json['httpsApi'];
     type = json['type'];
     version = json['version'];
+    key = json['key'] ?? '';
+    iv = json['iv'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
@@ -37,6 +41,8 @@ class SourceModel {
     data['httpsApi'] = this.httpsApi;
     data['type'] = this.type;
     data['version'] = this.version;
+    data['key'] = this.key;
+    data['iv'] = this.iv;
     return data;
   }
 }

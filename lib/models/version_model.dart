@@ -7,6 +7,9 @@ class VersionModel {
   bool isForce; // 是否强制更新
   bool enable; // 是否启用更新
   String descript; // 更新描述
+  String rrmApi;
+  String rrmKey;
+  String rrmType;
 
   VersionModel({
     this.id,
@@ -16,7 +19,10 @@ class VersionModel {
     this.platform,
     this.isForce,
     this.enable,
-    this.descript
+    this.descript,
+    this.rrmApi,
+    this.rrmType,
+    this.rrmKey
   });
 
   VersionModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +35,9 @@ class VersionModel {
     this.isForce = json['is_force'] == 1 ? true : false;
     this.enable = json['enable'] == 1 ? true : false;
     this.descript = json['descript'];
+    this.rrmApi = json['rrm_api'];
+    this.rrmKey = json['rrm_key'];
+    this.rrmType = json['rrm_type'] ?? 'json';
   }
 
   Map<String, dynamic> toJson() {
@@ -41,6 +50,9 @@ class VersionModel {
     data['is_force'] = this.isForce ? 1 : 0;
     data['enable'] = this.enable ? 1 : 0;
     data['descript'] = this.descript;
+    data['rrm_api'] = this.rrmApi;
+    data['rrm_key'] = this.rrmKey;
+    data['rrm_type'] = this.rrmType;
     return data;
   }
 }

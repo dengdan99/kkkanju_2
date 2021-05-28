@@ -61,7 +61,7 @@ class XmlUtil {
             anthologies.add(Anthology(name: null, url: s));
           }
         });
-        sources.add(VideoSource(name: sourceName + '资源', anthologies: anthologies));
+        sources.add(VideoSource(name: sourceName, anthologies: anthologies));
         defAnthologies = anthologies;
         index ++;
       }
