@@ -13,6 +13,7 @@ class Constant {
   static const String key_m3u8_to_mp4 = 'key_m3u8_to_mp4';
   static const String key_db_name = 'player.db';
   static const String key_home_page_data_cache = 'home_page_data_cache';
+  static const String key_search_history = 'key_search_history';
 }
 
 Map<String, Color> themeColorMap = {

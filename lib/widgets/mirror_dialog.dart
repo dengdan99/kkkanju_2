@@ -19,7 +19,6 @@ class MirrorDialog extends StatefulWidget {
 
 class _MirrorDialogState extends State<MirrorDialog> {
   bool _loading = false;
-  bool _searching = false;
   MirrorLinkProvider _mirrorLinkProvider;
   PlayerDataManager _playerDataManager;
 
@@ -58,7 +57,6 @@ class _MirrorDialogState extends State<MirrorDialog> {
     _mirrorLinkProvider.addListener(_mirrorListener);
     _mirrorLinkProvider.startSearchTvData();
     setState(() {
-      _searching = true;
       _loading = false;
     });
   }
@@ -130,7 +128,7 @@ class _MirrorDialogState extends State<MirrorDialog> {
           Text('请选择设备'),
           TextButton(
             onPressed: () => _searchTv(),
-            child: _searching ?  Text('搜索中...') :  Text('重新搜索'),
+            child: Text('重新搜索'),
           )
         ],
       ),

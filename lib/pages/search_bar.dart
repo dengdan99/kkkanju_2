@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
+import 'package:kkkanju_2/utils/sp_helper.dart';
+import 'package:kkkanju_2/widgets/search_suggestions.dart';
 import 'package:kkkanju_2/widgets/video_item.dart';
 
 class SearchBarDelegate extends SearchDelegate<String> {
-  List<String> _suggestList = [];
   Future<List<VideoModel>> _future;
 
   SearchBarDelegate({
@@ -105,6 +107,11 @@ class SearchBarDelegate extends SearchDelegate<String> {
             if (snapshot.hasData && snapshot.data != null) {
               try {
                 List<VideoModel> videoList = snapshot.data;
+                List _suggestList = SpHelper.getStringList(Constant.key_search_history, defValue: []);
+                if (!_suggestList.contains(query)) {
+                  _suggestList.add(query);
+                  SpHelper.putStringList(Constant.key_search_history, _suggestList);
+                }
                 if (videoList.length == 0) {
                   return Center(
                     child: Column(
@@ -132,6 +139,7 @@ class SearchBarDelegate extends SearchDelegate<String> {
                     ),
                   );
                 }
+                print('~~~~~~~');
                 return ListView.builder(
                   itemCount: videoList.length,
                   itemBuilder: (context, index) {
@@ -139,6 +147,7 @@ class SearchBarDelegate extends SearchDelegate<String> {
                   }
                 );
               } catch (e) {
+                print(e);
                 return _buildText('数据解析错误');
               }
             } else {
@@ -157,35 +166,9 @@ class SearchBarDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    return Container();
-//     return Column(
-//      children: <Widget>[
-//        Container(
-//          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-//          alignment: Alignment.centerLeft,
-//          child: Text(
-//              '大家都在搜：',
-//              style: TextStyle(
-//                  color: Colors.black,
-//                  fontSize: 18.0
-//              )
-//          ),
-//        ),
-//        Wrap(
-//          spacing: 16,
-//          alignment: WrapAlignment.start,
-//          children: _suggestList.map((str) {
-//            return RaisedButton(
-//              child: Text(str),
-//              onPressed: () {
-//                query = str;
-//                showResults(context);
-//              },
-//            );
-//          }).toList(),
-//        )
-//
-//      ],
-//    );
+    return SearchSuggestions(onClickHistory: (str) {
+      query = str;
+      showResults(context);
+    });
   }
 }

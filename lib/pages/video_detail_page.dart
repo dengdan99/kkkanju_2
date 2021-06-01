@@ -144,10 +144,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
           }
         });
 
-        if (RrmUtils.isRrmVideo(currentVideoSource)) {
-          url = await RrmUtils.getM3u8Url(_currentSource, versionModel, url);
-        }
-
         _startPlay(url, name, playPosition: position, version: versionModel, source: _currentSource);
       }
     }
@@ -155,6 +151,10 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
   }
 
   void _startPlay(String url, String name, { int playPosition, VersionModel version, SourceModel source }) async {
+    if (RrmUtils.isRrmVideo(currentVideoSource)) {
+      url = await RrmUtils.getM3u8Url(_currentSource, version, url);
+    }
+
     // 切换视频，重置_cachePlayedSecond
     _cachePlayedSecond = -1;
     print("播放地址：" + url);
@@ -264,9 +264,26 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
     }
   }
 
-  Widget _buildLoadingFallback() {
-    return Center(
-      child: CircularProgressIndicator(),
+  Widget _buildLoadingFallback(BuildContext context) {
+    return Stack(
+      children: [
+        Align(
+          alignment: Alignment.topLeft,
+          child: BackButton(color: Colors.white,),
+        ),
+        Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Text('精彩即将开始', style: TextStyle(color: Colors.white),),
+                ),
+              ],
+            )
+        )
+      ],
     );
   }
 
@@ -542,7 +559,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
   }
 
   Widget _buildAnthologyButton (Anthology anthology) {
-    var _url = _playerDataManager.currentAnthology.url;
+    var _url = _playerDataManager?.currentAnthology?.url;
     return SizedBox(
       height: 36,
       child: ElevatedButton(
@@ -593,6 +610,9 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
   GestureDetector _buildMirror() {
     return GestureDetector(
       onTap: () {
+        if (_flickManager != null && _flickManager.flickControlManager.isFullscreen) {
+          _flickManager.flickControlManager.exitFullscreen();
+        }
         showDialog(
           context: context,
           builder: (content) {
@@ -713,6 +733,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
 //          ],
           flickVideoWithControls: FlickVideoWithControls(
             playerErrorFallback: _buildPlayerError(context),
+            playerLoadingFallback: _buildLoadingFallback(context),
             controls: CustomEmbedControls(
               topRightWidget: Row(
                 children: [
@@ -728,6 +749,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
             controls: CustomOrientationControls(
               topRightWidget: Row(
                 children: [
+                  _buildMirror(),
                   _buildDownload(),
                 ],
               ),

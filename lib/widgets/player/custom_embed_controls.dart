@@ -8,7 +8,7 @@ import 'data_manager.dart';
 
 class CustomEmbedControls extends StatelessWidget {
   const CustomEmbedControls(
-        {Key key, this.iconSize = 20, this.fontSize = 12, this.topRightWidget})
+        {Key key, this.iconSize = 28, this.fontSize = 12, this.topRightWidget})
       : super(key: key);
   final double iconSize;
   final double fontSize;

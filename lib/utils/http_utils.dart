@@ -198,6 +198,7 @@ class HttpUtils {
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Response response = await dio.get(currentSource.httpsApi + '/index/rrm?key=$key&type=$type&url=$orginUrl');
       Map json = jsonDecode(response.data.toString());
+      print(currentSource.httpsApi + '/index/rrm?key=$key&type=$type&url=$orginUrl');
       if (json['code'] == 1) {
         url = json['data']['url'];
       } else {
