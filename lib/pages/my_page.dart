@@ -71,7 +71,7 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
           print(error);
         },
         onAdLoaded: (Ad ad) {
-          _ListItemInfo adButton = _ListItemInfo(title: '看广告支持一下', icon: Icons.thumb_up, handler: () => myRewarded.show());
+          _ListItemInfo adButton = _ListItemInfo(title: '看广告支持一下', icon: Icons.thumb_up, handler: (item) => myRewarded.show());
           setState(() {
             _items.add(adButton);
           });

@@ -11,6 +11,7 @@ import 'package:kkkanju_2/models/source_model.dart';
 import 'package:kkkanju_2/models/suggest_model.dart';
 import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
+import 'package:kkkanju_2/utils/http_interceptors.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/utils/xml_util.dart';
 
@@ -24,6 +25,7 @@ class HttpUtils {
           return true;
         };
       };
+      _dio.interceptors.add(HttpInterceptors());
       return _dio;
     }
     return _dio;
@@ -123,21 +125,12 @@ class HttpUtils {
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
 
-      // 先查找list
-      Map<String, dynamic> params = {"ac": "list", "at": "xml"};
+      // 如果 ac=list 只有 vod_id,vod_name,type_id
+      Map<String, dynamic> params = {"ac": "videolist", "at": "xml"};
       params["wd"] = keyword;
       Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
-      if (videos.isNotEmpty) {
-        // 再查找videolist, videolist数据比较全，比如图片
-        params["ac"] = "videolist";
-        params["at"] = "xml";
-        params["ids"] = videos.map((e) => e.id).join(",");
-        response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
-        xmlStr = response.data.toString();
-        videos = XmlUtil.parseVideoList(xmlStr);
-      }
     } catch (e, s) {
       errorHandler(e);
     }
@@ -198,7 +191,6 @@ class HttpUtils {
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Response response = await dio.get(currentSource.httpsApi + '/index/rrm?key=$key&type=$type&url=$orginUrl');
       Map json = jsonDecode(response.data.toString());
-      print(currentSource.httpsApi + '/index/rrm?key=$key&type=$type&url=$orginUrl');
       if (json['code'] == 1) {
         url = json['data']['url'];
       } else {

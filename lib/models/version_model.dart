@@ -26,7 +26,6 @@ class VersionModel {
   });
 
   VersionModel.fromJson(Map<String, dynamic> json) {
-    print(json);
     this.id = json['id'];
     this.version = json['version'];
     this.jumpUrl = json['jump_url'];

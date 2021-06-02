@@ -11,6 +11,7 @@ import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
 import 'package:kkkanju_2/utils/ColorsUtil.dart';
+import 'package:kkkanju_2/utils/analytics_utils.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,7 @@ class _SplashPageState extends State<SplashPage> {
   
   @override
   void initState() {
+    AnalyticsUtils.openAppEvent();
     super.initState();
     _initAsync();
   }
@@ -48,8 +50,8 @@ class _SplashPageState extends State<SplashPage> {
     Map json = jsonDecode(sourceJson);
     SourceModel _sm = SourceModel.fromJson(json);
     context.read<SourceProvider>().setCurrentSource(_sm, context);
-//    删除30天以前的播放记录
-    _db.deleteAgoRecord(DateTime.now().subtract(Duration(days: 30)).millisecondsSinceEpoch);
+    // 删除60天以前的播放记录
+    _db.deleteAgoRecord(DateTime.now().subtract(Duration(days: 60)).millisecondsSinceEpoch);
 
 //    倒计时
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {

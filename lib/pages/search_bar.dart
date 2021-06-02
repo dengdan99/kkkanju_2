@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/models/video_model.dart';
+import 'package:kkkanju_2/utils/analytics_utils.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/widgets/search_suggestions.dart';
@@ -106,6 +107,7 @@ class SearchBarDelegate extends SearchDelegate<String> {
             }
             if (snapshot.hasData && snapshot.data != null) {
               try {
+                AnalyticsUtils.searchEvent(keywords: query);
                 List<VideoModel> videoList = snapshot.data;
                 List _suggestList = SpHelper.getStringList(Constant.key_search_history, defValue: []);
                 if (!_suggestList.contains(query)) {
@@ -139,7 +141,6 @@ class SearchBarDelegate extends SearchDelegate<String> {
                     ),
                   );
                 }
-                print('~~~~~~~');
                 return ListView.builder(
                   itemCount: videoList.length,
                   itemBuilder: (context, index) {

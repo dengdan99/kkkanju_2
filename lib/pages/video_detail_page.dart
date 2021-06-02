@@ -18,8 +18,10 @@ import 'package:kkkanju_2/provider/download_task.dart';
 import 'package:kkkanju_2/provider/mirror_link.dart';
 import 'package:kkkanju_2/provider/player_data_manager.dart';
 import 'package:kkkanju_2/provider/source.dart';
+import 'package:kkkanju_2/utils/analytics_utils.dart';
 import 'package:kkkanju_2/utils/db_helper.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
+import 'package:kkkanju_2/utils/log_util.dart';
 import 'package:kkkanju_2/utils/rrm_utils.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/widgets/player/custom_embed_controls.dart';
@@ -101,6 +103,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
       baseUrl = widget.api + HttpUtils.videoPath;
     }
     VideoModel video = await HttpUtils.getVideoById(baseUrl, widget.videoId);
+    AnalyticsUtils.enterVideoPage(video);
     _videoModel = video;
     if (video != null) {
       if (video.sources.isNotEmpty) {
@@ -108,7 +111,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
         setState(() {
           _recordModel = recordModel;
           if (recordModel != null) {
-            print('recordModel.currentSourceIndex' + recordModel.currentSourceIndex.toString());
+//            print('recordModel.currentSourceIndex' + recordModel.currentSourceIndex.toString());
             _sourceIndex = recordModel.currentSourceIndex;
           }
         });
@@ -157,8 +160,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
 
     // 切换视频，重置_cachePlayedSecond
     _cachePlayedSecond = -1;
-    print("播放地址：" + url);
-    print("name: " + name);
+    LogUtil.debug("当前播放：$name -> $url");
     // 初始化播放器
     _flickManager = FlickManager(
       videoPlayerController: VideoPlayerController.network(url),

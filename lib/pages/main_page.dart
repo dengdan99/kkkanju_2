@@ -95,9 +95,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
         }),
         centerTitle: true,
         title: TextButton(
-          child: _searchInput('请输入搜索的关键字,片名，演员'),
+          child: _searchInput('请输入视频关键字'),
           onPressed: () {
-            showSearch(context: context, delegate: SearchBarDelegate(hintText: '搜索【${_currentSource.name}】的资源'));
+            showSearch(context: context, delegate: SearchBarDelegate(hintText: '搜索 全网最强资源'));
           },
         ),
         actions: [

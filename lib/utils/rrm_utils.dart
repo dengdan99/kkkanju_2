@@ -3,6 +3,7 @@ import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
 import 'package:kkkanju_2/utils/aes_utils.dart';
 import 'package:kkkanju_2/utils/http_utils.dart';
+import 'package:kkkanju_2/utils/log_util.dart';
 
 class RrmUtils {
   /// 这些视频源 让rrm 来解析
@@ -20,7 +21,7 @@ class RrmUtils {
     final key = getKey(_sourceModel, _versionModel);
     String url = '';
     url = await HttpUtils.getRrmUrl(key, _versionModel.rrmType, originUrl);
-    print('rrm url: ' + url);
+    LogUtil.debug('人人迷资源地址: ' + url);
     return url;
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:kkkanju_2/models/source_model.dart';
 import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
+import 'package:kkkanju_2/utils/analytics_utils.dart';
 import 'package:kkkanju_2/utils/rrm_utils.dart';
 import 'package:video_player/video_player.dart';
 
@@ -65,6 +66,7 @@ class PlayerDataManager with ChangeNotifier {
     if (index < 0) index = 0;
     if (index >= anthologies.length) index = anthologies.length - 1;
     currentAnthology = anthologies[index];
+    AnalyticsUtils.playVideo(videoModel, sourceName: videoSource.name, anthologyName: currentAnthology.name);
     notifyListeners();
   }
 
