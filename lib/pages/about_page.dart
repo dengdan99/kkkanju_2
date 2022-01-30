@@ -37,7 +37,7 @@ class _AboutPageState extends State<AboutPage> {
             Container(
               padding: EdgeInsets.only(top: 10, left: 30, right: 30, bottom: 30),
               child: HtmlWidget(
-                aboutUsHtml ?? '看剧爱好者 ^_^ kkkanju.com',
+                aboutUsHtml ?? '我们是一群看剧爱好者，app用来自己看，如果觉得不错，可以推荐一下 by kkkanju.com',
                 textStyle: TextStyle(
                   height: 1.8,
                   fontSize: 14,
@@ -50,7 +50,11 @@ class _AboutPageState extends State<AboutPage> {
               style: TextStyle(
                 color: KkColors.black,
               ),
-            )
+            ),
+//            Image.asset(
+//              'assets/image/sp.jpg',
+//              fit: BoxFit.fitHeight,
+//            ),
           ],
         ),
 

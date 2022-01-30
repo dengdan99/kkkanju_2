@@ -40,7 +40,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     super.initState();
     // 初始化下载器
     context.read<DownloadTaskProvider>().initialize(context);
-    _sourceProvider.checkVersion(context);
   }
 
   Widget _searchInput(String text) {

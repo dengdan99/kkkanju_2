@@ -9,6 +9,7 @@ import 'package:kkkanju_2/common/kk_colors.dart';
 import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/router/application.dart';
 import 'package:kkkanju_2/router/routers.dart';
+import 'package:kkkanju_2/utils/analytics_utils.dart';
 import 'package:provider/provider.dart';
 
 class MyPage extends StatefulWidget {
@@ -60,12 +61,14 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
   _initAd () {
     /// 激励广告
     List<String> testDevices = ['7ACB3A77CBF29DD30773DE4170923AA6', 'D802DB35DCF70C5951D389B6B6935C4B'];
+    String adId1 = Platform.isIOS ? 'ca-app-pub-6001242100944185/4086433480' : 'ca-app-pub-6001242100944185/7116987162';
     myRewarded = RewardedAd(
-      adUnitId: Platform.isIOS ? 'ca-app-pub-6001242100944185/4086433480' : 'ca-app-pub-6001242100944185/7116987162',
+      adUnitId: adId1,
 //      adUnitId: 'ca-app-pub-3940256099942544/5224354917',
-      request: AdRequest(testDevices: testDevices),
+//      request: AdRequest(testDevices: testDevices),
       listener: AdListener(
         onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          AnalyticsUtils.adLoadFail(adId1);
           ad.dispose();
           print('=======激励广告加载错误 error');
           print(error);
@@ -86,13 +89,15 @@ class _MyPageState extends State<MyPage> with AutomaticKeepAliveClientMixin {
     myRewarded.load();
 
     /// 横幅广告
+    String adId2 = Platform.isIOS ? 'ca-app-pub-6001242100944185/5942133143' : 'ca-app-pub-6001242100944185/3785623530';
     myBannerAd = BannerAd(
       size: AdSize.banner,
-      adUnitId: Platform.isIOS ? 'ca-app-pub-6001242100944185/5942133143' : 'ca-app-pub-6001242100944185/3785623530',
+      adUnitId: adId2,
 //      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
       request: AdRequest(testDevices: testDevices),
       listener: AdListener(
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            AnalyticsUtils.adLoadFail(adId2);
             ad.dispose();
             print('=======横幅广告加载错误 error');
             print(error);

@@ -19,7 +19,10 @@ class SourceProvider with ChangeNotifier {
   void setCurrentSource(SourceModel model, BuildContext context) {
     _currentSource = model;
     SpHelper.putObject(Constant.key_current_source, model);
+  }
 
+  // 预加载一些数据
+  void preloadData(BuildContext context) {
     context.read<CategoryProvider>().setCategoryIndex(0);
     context.read<CategoryProvider>().getCategoryList();
     notifyListeners();

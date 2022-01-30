@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:get_ip/get_ip.dart';
 import 'package:kkkanju_2/common/constant.dart';
 import 'package:kkkanju_2/models/category_model.dart';
@@ -11,9 +14,13 @@ import 'package:kkkanju_2/models/source_model.dart';
 import 'package:kkkanju_2/models/suggest_model.dart';
 import 'package:kkkanju_2/models/version_model.dart';
 import 'package:kkkanju_2/models/video_model.dart';
+import 'package:kkkanju_2/provider/source.dart';
 import 'package:kkkanju_2/utils/http_interceptors.dart';
 import 'package:kkkanju_2/utils/sp_helper.dart';
 import 'package:kkkanju_2/utils/xml_util.dart';
+import 'package:path/path.dart';
+
+import 'aes_utils.dart';
 
 class HttpUtils {
   static Dio _dio;
@@ -33,6 +40,23 @@ class HttpUtils {
   static Dio get dio => getDioInstance();
   static String videoPath = "/provide/vod";
   static String versionPath = "/index/version";
+
+  static Map getSign() {
+    Map<String, String> res = Map();
+    var timestamp = new DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    Map sourceJson = SpHelper.getObject(Constant.key_current_source);
+    Map versionJson = SpHelper.getObject(Constant.key_version_result);
+    if (versionJson == null) {
+      print('versionJson is null');
+      return res;
+    }
+    VersionModel version = VersionModel.fromJson(versionJson);
+    SourceModel source = SourceModel.fromJson(sourceJson);
+    String key = AesUtils.decryptAes(version.apiEncryptKey, source.key, iv: source.iv);
+    res['timestamp'] = timestamp.toString();
+    res['sign'] = md5.convert(utf8.encode(key + timestamp.toString())).toString();
+    return res;
+  }
 
   static void errorHandler(err) {
     DioError dioError;
@@ -62,10 +86,11 @@ class HttpUtils {
 
   static Future<List<CategoryModel>> getCategoryList() async {
     try {
+      Map signMap = getSign();
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Map<String, dynamic> params = {"ac": "list", "at": "xml"};
-      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params..addAll(signMap));
       String xmlStr = response.data.toString();
       return XmlUtil.parseCategoryList(xmlStr);
     } catch (e, s) {
@@ -77,6 +102,7 @@ class HttpUtils {
   static Future<List<VideoModel>> getVideoList({int pageNum = 1, String type, String keyword, String ids, int hour}) async {
     List<VideoModel> videos = [];
     try {
+      Map signMap = getSign();
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Map<String, dynamic> params = {"ac": "videolist", "at": "xml"};
@@ -96,7 +122,7 @@ class HttpUtils {
       if (hour != null) {
         params["h"] = hour;
       }
-      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params..addAll(signMap));
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
@@ -108,9 +134,10 @@ class HttpUtils {
   static Future<VideoModel> getVideoById(String baseUrl,  String id) async {
     VideoModel video;
     try {
+      Map signMap = getSign();
       Map<String, dynamic> params = {"ac": "videolist", "at": "xml"};
       params["ids"] = id;
-      Response response = await dio.get(baseUrl, queryParameters: params);
+      Response response = await dio.get(baseUrl, queryParameters: params..addAll(signMap));
       String xmlStr = response.data.toString();
       video = XmlUtil.parseVideo(xmlStr);
     } catch (e, s) {
@@ -122,13 +149,14 @@ class HttpUtils {
   static Future<List<VideoModel>> searchVideo(String keyword) async {
     List<VideoModel> videos = [];
     try {
+      Map signMap = getSign();
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
 
       // 如果 ac=list 只有 vod_id,vod_name,type_id
       Map<String, dynamic> params = {"ac": "videolist", "at": "xml"};
       params["wd"] = keyword;
-      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params..addAll(signMap));
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {
@@ -141,10 +169,11 @@ class HttpUtils {
   static Future<List<VideoModel>> getLevelVideo(int level) async {
     List<VideoModel> videos = [];
     try {
+      Map signMap = getSign();
       Map<String, dynamic> sourceJson = SpHelper.getObject(Constant.key_current_source);
       SourceModel currentSource = SourceModel.fromJson(sourceJson);
       Map<String, dynamic> params = {"ac": "videolist","level": level, "at": "xml"};
-      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params);
+      Response response = await dio.get(currentSource.httpsApi + videoPath, queryParameters: params..addAll(signMap));
       String xmlStr = response.data.toString();
       videos = XmlUtil.parseVideoList(xmlStr);
     } catch (e, s) {

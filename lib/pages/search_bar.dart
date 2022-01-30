@@ -10,6 +10,8 @@ import 'package:kkkanju_2/widgets/video_item.dart';
 
 class SearchBarDelegate extends SearchDelegate<String> {
   Future<List<VideoModel>> _future;
+  List<VideoModel> res = [];
+  String keywords = '';
 
   SearchBarDelegate({
     String hintText,
@@ -19,8 +21,12 @@ class SearchBarDelegate extends SearchDelegate<String> {
 
   Future<List<VideoModel>> _getSearchResult(str) async {
     if (str == null || str == '') return [];
-
-    return await HttpUtils.searchVideo(str);
+    if (keywords == str && res.isNotEmpty) {
+      return res;
+    }
+    keywords = str;
+    res = await HttpUtils.searchVideo(str);
+    return res;
   }
 
   Widget _buildText(String str) {
@@ -111,7 +117,7 @@ class SearchBarDelegate extends SearchDelegate<String> {
                 List<VideoModel> videoList = snapshot.data;
                 List _suggestList = SpHelper.getStringList(Constant.key_search_history, defValue: []);
                 if (!_suggestList.contains(query)) {
-                  _suggestList.add(query);
+                  _suggestList.insert(0, query);
                   SpHelper.putStringList(Constant.key_search_history, _suggestList);
                 }
                 if (videoList.length == 0) {

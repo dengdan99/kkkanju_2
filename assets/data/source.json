@@ -1,10 +1,10 @@
 {
   "name": "kk看剧",
-  "url": "http://www.kk2021.me",
-  "httpApi": "http://api2app.kk2021.me/api.php",
-  "httpsApi": "https://api2app.kk2021.me/api.php",
+  "url": "http://www.kkkanju.com",
+  "httpApi": "http://www.kkkanju.com/api.php",
+  "httpsApi": "https://www.kkkanju.com/api.php",
   "type": "美剧",
-  "version": 7,
+  "version": 9,
   "key": "45643332098789413367867851920329",
   "iv": "8105547186756005"
 }

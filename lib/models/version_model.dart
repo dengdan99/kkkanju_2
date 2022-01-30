@@ -10,6 +10,7 @@ class VersionModel {
   String rrmApi;
   String rrmKey;
   String rrmType;
+  String apiEncryptKey; // api加密过的密钥
 
   VersionModel({
     this.id,
@@ -22,7 +23,8 @@ class VersionModel {
     this.descript,
     this.rrmApi,
     this.rrmType,
-    this.rrmKey
+    this.rrmKey,
+    this.apiEncryptKey
   });
 
   VersionModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class VersionModel {
     this.descript = json['descript'];
     this.rrmApi = json['rrm_api'];
     this.rrmKey = json['rrm_key'];
+    this.apiEncryptKey = json['api_key'];
     this.rrmType = json['rrm_type'] ?? 'json';
   }
 
@@ -52,6 +55,7 @@ class VersionModel {
     data['rrm_api'] = this.rrmApi;
     data['rrm_key'] = this.rrmKey;
     data['rrm_type'] = this.rrmType;
+    data['api_key'] = this.apiEncryptKey;
     return data;
   }
 }

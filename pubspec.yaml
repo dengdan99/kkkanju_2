@@ -28,6 +28,7 @@ dependencies:
   firebase_core: any
   firebase_analytics: any
   cupertino_icons: ^1.0.0
+  crypto: ^2.0.6
   # 路由
   fluro: ^1.7.8
   provider: ^5.0.0

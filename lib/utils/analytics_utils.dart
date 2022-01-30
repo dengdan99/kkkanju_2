@@ -25,6 +25,11 @@ class AnalyticsUtils {
     await sendAnalyticsEvent(eventName: 'kk_open_app');
   }
 
+  /// 打开app统计
+  static adLoadFail(String id) async {
+    await sendAnalyticsEvent(eventName: 'kk_ad_load_fail', params: {id: id});
+  }
+
   /// 打开播放页面统计
   static enterVideoPage(VideoModel videoModel) async {
     Map<String, dynamic> params = {

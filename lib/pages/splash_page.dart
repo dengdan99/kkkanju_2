@@ -25,6 +25,7 @@ class _SplashPageState extends State<SplashPage> {
   DBHelper _db = DBHelper();
   Timer _timer;
   int _count = 3;
+  bool inited = false;
   
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _SplashPageState extends State<SplashPage> {
   
   void _initAsync() async {
     SpHelper.remove(Constant.key_home_page_data_cache);
+    // 检查更新
     await SpHelper.getInstance();
     String colorKey = SpHelper.getString(Constant.key_theme_color, defValue: Constant.default_theme_color);
     // 初始化主题颜色
@@ -52,7 +54,11 @@ class _SplashPageState extends State<SplashPage> {
     context.read<SourceProvider>().setCurrentSource(_sm, context);
     // 删除60天以前的播放记录
     _db.deleteAgoRecord(DateTime.now().subtract(Duration(days: 60)).millisecondsSinceEpoch);
-
+    // 检查版本
+    await context.read<SourceProvider>().checkVersion(context);
+    inited = true;
+    // 预加载一些数据
+    context.read<SourceProvider>().preloadData(context);
 //    倒计时
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
@@ -69,7 +75,9 @@ class _SplashPageState extends State<SplashPage> {
 
   // 跳转主页
   void _goMain() {
-    Application.router.navigateTo(context, Routers.homePage, clearStack: true, transition: TransitionType.fadeIn);
+    if (inited) {
+      Application.router.navigateTo(context, Routers.homePage, clearStack: true, transition: TransitionType.fadeIn);
+    }
   }
 
   @override

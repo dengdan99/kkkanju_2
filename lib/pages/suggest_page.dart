@@ -41,9 +41,8 @@ class _SuggestPage extends State<SuggestPage> {
       bool showAd = await _showDialog();
       if (showAd && !myRewardedError) {
         await myRewarded.show();
-      } else {
-        await postForm();
       }
+      await postForm();
     }
   }
 

@@ -66,7 +66,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
   void initState() {
     super.initState();
     _playerDataManager = context.read<PlayerDataManager>();
-//    _initAd();
+    _initAd();
     _futureFetch = _getVideoInfo();
   }
 
@@ -77,6 +77,7 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
       request: AdRequest(testDevices: ['7ACB3A77CBF29DD30773DE4170923AA6']),
       listener: AdListener(
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
+            AnalyticsUtils.adLoadFail('ca-app-pub-6001242100944185/6628544763');
             ad.dispose();
             print('=======横幅广告加载错误 error');
             print(error);
@@ -444,6 +445,17 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
       ]);
     }
 
+    if (!_bannerAdLoading) {
+      children.addAll([
+        Container(
+          alignment: Alignment.center,
+          child: AdWidget(ad: myBannerAd),
+          width: myBannerAd.size.width.toDouble(),
+          height: myBannerAd.size.height.toDouble(),
+        ),
+      ]);
+    }
+
     // 添加简介
     children.addAll([
       Padding(
@@ -787,14 +799,6 @@ class _VideoDetailPageState extends State<VideoDetailPage> with SingleTickerProv
               color: KkColors.black,
               child: _buildPlayerArea(),
             ),
-          ),
-          _bannerAdLoading
-              ? Container()
-              : Container(
-            alignment: Alignment.center,
-            child: AdWidget(ad: myBannerAd),
-            width: myBannerAd.size.width.toDouble(),
-            height: myBannerAd.size.height.toDouble(),
           ),
           Expanded(
             flex: 1,
